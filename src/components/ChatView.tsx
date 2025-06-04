@@ -1,8 +1,7 @@
+
 import React, { useState, useRef, useEffect } from "react";
 import { useWorkspace } from "@/context/WorkspaceContext";
 import { Button } from "@/components/ui/button";
-// remove the old Input import since we now use <textarea>
-// import { Input } from "@/components/ui/input";
 import { Send, Upload, FileText, Link, ClipboardCopy } from "lucide-react";
 import { toast } from "sonner";
 import { ChatMessage, LLMSource } from "@/types/api";
@@ -41,12 +40,12 @@ const ChatView = ({
 
   const [queries, setQueries] = useState<Record<number, string>>({});
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const [loadingMap, setLoadingMap] = useState<Record<string, boolean>>({});
+  // Fix: Use workspace-specific loading state to prevent ghost loading states
+  const [workspaceLoadingStates, setWorkspaceLoadingStates] = useState<Record<number, boolean>>({});
   const [expandedSources, setExpandedSources] = useState<
     Record<string, boolean>
   >({});
 
-  // NEW: textarea ref for auto-resize
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   // Determine if chat history exists
@@ -56,6 +55,19 @@ const ChatView = ({
   const hasDocuments = currentSessionDocuments.length > 0;
 
   const filteredMessages = chatMessages[workspaceId] || [];
+  
+  // Get workspace-specific loading state
+  const isWorkspaceLoading = workspaceLoadingStates[workspaceId] || false;
+
+  // Clear workspace loading state when switching workspaces
+  useEffect(() => {
+    if (!loading && workspaceLoadingStates[workspaceId]) {
+      setWorkspaceLoadingStates(prev => ({
+        ...prev,
+        [workspaceId]: false
+      }));
+    }
+  }, [loading, workspaceId, workspaceLoadingStates]);
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -65,7 +77,6 @@ const ChatView = ({
     return () => clearTimeout(timeout);
   }, [workspaceId, chatMessages]);
 
-  // NEW: auto-resize function
   const autoResize = () => {
     if (inputRef.current) {
       inputRef.current.style.height = "auto";
@@ -73,7 +84,6 @@ const ChatView = ({
     }
   };
 
-  // Re-run autoResize when the query content changes
   useEffect(() => {
     autoResize();
   }, [queries[workspaceId]]);
@@ -105,19 +115,28 @@ const ChatView = ({
       return;
     }
 
-    // clear and show loading
+    // Set workspace-specific loading state
+    setWorkspaceLoadingStates(prev => ({
+      ...prev,
+      [workspaceId]: true
+    }));
+    
+    // Clear input
     setQueries((prev) => ({ ...prev, [workspaceId]: "" }));
-    setLoadingMap((prev) => ({ ...prev, [workspaceId]: true }));
 
     try {
       await sendMessage(workspaceId, currentQuery);
     } catch (error) {
       console.error(error);
       toast.error("Failed to send message");
-      // restore text
+      // Restore text on error
       setQueries((prev) => ({ ...prev, [workspaceId]: currentQuery }));
     } finally {
-      setLoadingMap((prev) => ({ ...prev, [workspaceId]: false }));
+      // Clear workspace-specific loading state
+      setWorkspaceLoadingStates(prev => ({
+        ...prev,
+        [workspaceId]: false
+      }));
     }
   };
 
@@ -239,7 +258,8 @@ const ChatView = ({
           </div>
         )}
 
-        {loadingMap[workspaceId] && (
+        {/* Only show loading indicator for the current workspace */}
+        {isWorkspaceLoading && (
           <div className="flex justify-start">
             <div className="bg-gray-800 text-white px-5 py-3 rounded-xl animate-pulse flex gap-2">
               <div className="w-2 h-2 rounded-full bg-white" />
@@ -299,7 +319,7 @@ const ChatView = ({
           <Button
             variant="default"
             onClick={handleSendMessage}
-            disabled={loading}
+            disabled={isWorkspaceLoading}
             className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-4 py-2 shadow-md text-sm"
           >
             <Send className="w-4 h-4" />
