@@ -917,7 +917,36 @@ export const WorkspaceProvider = ({ children }: { children: ReactNode }) => {
       if (!sessionId) {
         throw new Error("No session found. Please create a new workspace.");
       }
-  
+
+      // Step 1: Immediately save the prompt with empty response
+      let savedPromptId: number | undefined;
+      try {
+        const initialPromptData: ChatPrompt = {
+          prompt_text: message,
+          response_text: "",
+          model_name: DEFAULT_MODEL_NAME,
+          temperature: DEFAULT_TEMPERATURE,
+          token_usage: DEFAULT_TOKEN_USAGE,
+          ws_id: workspaceId,
+          user_id: user.user_id,
+          session_id: sessionId,
+          resp_time: "0.0",
+          sources: [],
+          is_active: true,
+        };
+
+        const saveResponse = await promptHistoryApi.savePrompt(initialPromptData);
+        if (saveResponse.success && saveResponse.data) {
+          const promptData = Array.isArray(saveResponse.data) ? saveResponse.data[0] : saveResponse.data;
+          savedPromptId = promptData.prompt_id;
+          console.log(`Saved initial prompt with ID: ${savedPromptId}`);
+        }
+      } catch (saveErr) {
+        console.error("Failed to save initial prompt:", saveErr);
+        // Continue with LLM query even if prompt saving fails
+      }
+
+      // Step 2: Query the LLM API
       const response = await llmApi.query(message, sessionId);
   
       const botMessage: ChatMessage = {
@@ -936,25 +965,29 @@ export const WorkspaceProvider = ({ children }: { children: ReactNode }) => {
         };
       });
   
-      // Save the chat history to the API with response time and sources
-      try {
-        const promptData: ChatPrompt = {
-          prompt_text: message,
-          response_text: response.answer,
-          model_name: DEFAULT_MODEL_NAME,
-          temperature: DEFAULT_TEMPERATURE,
-          token_usage: DEFAULT_TOKEN_USAGE,
-          ws_id: workspaceId,
-          user_id: user.user_id,
-          session_id: sessionId,
-          resp_time: response.response_time_seconds?.toString() || "0.0",
-          sources: response.sources?.map(source => source.summary) || [],
-          is_active: true,
-        };
-  
-        await promptHistoryApi.savePrompt(promptData);
-      } catch (saveErr) {
-        console.error("Failed to save prompt history:", saveErr);
+      // Step 3: Update the saved prompt with the response
+      if (savedPromptId) {
+        try {
+          const updatePromptData: ChatPrompt = {
+            prompt_id: savedPromptId,
+            prompt_text: message,
+            response_text: response.answer,
+            model_name: DEFAULT_MODEL_NAME,
+            temperature: DEFAULT_TEMPERATURE,
+            token_usage: DEFAULT_TOKEN_USAGE,
+            ws_id: workspaceId,
+            user_id: user.user_id,
+            session_id: sessionId,
+            resp_time: response.response_time_seconds?.toString() || "0.0",
+            sources: response.sources?.map(source => source.summary) || [],
+            is_active: true,
+          };
+
+          await promptHistoryApi.updatePrompt(updatePromptData);
+          console.log(`Updated prompt ${savedPromptId} with response`);
+        } catch (updateErr) {
+          console.error("Failed to update prompt with response:", updateErr);
+        }
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to send message";
@@ -1098,4 +1131,3 @@ export const useWorkspace = () => {
   }
   return context;
 };
-

@@ -159,6 +159,17 @@ export const promptHistoryApi = {
     return handleResponse<ApiResponse<ChatPrompt>>(response);
   },
 
+  updatePrompt: async (promptData: ChatPrompt): Promise<ApiResponse<ChatPrompt>> => {
+    const response = await fetch(`${API_BASE_URL}/api/v1/prompts`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(promptData),
+    });
+    return handleResponse<ApiResponse<ChatPrompt>>(response);
+  },
+
   getPrompts: async (
     wsId: number,
     userId: number,
