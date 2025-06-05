@@ -32,6 +32,7 @@ import SidebarNav from "./SidebarNav";
 import { useAuth } from "@/context/AuthContext";
 import { useLocation } from "react-router-dom";
 import ConfirmDialog from "./DeleteModal";
+import * as Tooltip from '@radix-ui/react-tooltip';
 
 const Sidebar = () => {
   const location = useLocation();
@@ -69,6 +70,8 @@ const Sidebar = () => {
   const hasUrlScraped = currentSessionDocuments.some(
     (doc) => !doc.endsWith(".pdf") && doc.startsWith("http")
   );
+
+  console.log(currentSessionDocuments)
 
   const filteredWorkspaces = searchQuery
     ? workspaces.filter((ws) =>
@@ -188,14 +191,12 @@ const Sidebar = () => {
                 const wsId = workspace.ws_id || 0;
                 const hasHistory = hasWorkspaceChatHistory(wsId);
                 const isSelected = selectedWorkspace?.ws_id === wsId;
-
+                console.log(workspace)
                 // Determine if workspace has URL or PDF content based on chat history or current session
                 const workspaceHasPdf = isSelected
                   ? hasPdfUploaded
                   : workspace.documents?.length > 0;
-                const workspaceHasUrl = isSelected
-                  ? hasUrlScraped
-                  : hasHistory && !workspaceHasPdf;
+
                 return (
                   <div
                     key={wsId}
@@ -207,31 +208,12 @@ const Sidebar = () => {
                   >
                     {/* Left Side: Workspace info */}
                     <div className="flex items-start space-x-2">
-                      {workspaceHasUrl && workspaceHasPdf ? (
-                        <div className="flex items-center space-x-0.5">
-                          <FileText
-                            className={`h-4 w-4 mt-0.5 ${isSelected ? "text-[#A259FF]" : "text-gray-400"
-                              }`}
-                          />
-                          <Link
-                            className={`h-4 w-4 mt-0.5 ${isSelected ? "text-[#A259FF]" : "text-gray-400"
-                              }`}
-                          />
-                        </div>
-                      ) : workspaceHasUrl ? (
-                        <Link
-                          className={`h-4 w-4 mt-0.5 ${isSelected ? "text-[#A259FF]" : "text-gray-400"
-                            }`}
-                        />
-                      ) : (
-                        <FileText
-                          className={`h-4 w-4 mt-0.5 ${isSelected ? "text-[#A259FF]" : "text-gray-400"
-                            }`}
-                        />
-                      )}
-
+                      <FileText
+                        className={`h-4 w-4 mt-0.5 ${isSelected ? "text-[#A259FF]" : "text-gray-400"
+                          }`}
+                      />
                       <div>
-                        <p className="text-sm font-medium text-gray-200">
+                        <p className="flex text-sm font-medium text-gray-200">
                           <p className="text-sm font-medium text-gray-200">
                             {workspace.ws_name.length > 20
                               ? `${workspace.ws_name.slice(0, 25)}...`
@@ -239,48 +221,93 @@ const Sidebar = () => {
                           </p>
                         </p>
                         <div className="flex items-center space-x-2 mt-0.5">
-                          {hasUrlScraped && (
-                            <p className="text-xs text-gray-400">
-                              It has files
-                            </p>
-                          )}
                           {/* Buttons*/}
-                          <div className="flex items-center space-x-1">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-6 w-6 p-0 text-gray-400 hover:text-white hover:bg-gray-600"
-                              onClick={(e) => handleHistoryClick(workspace, e)}
-                              title="View History"
-                            >
-                              <History className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-6 w-6 p-0 text-gray-400 hover:text-white hover:bg-gray-600"
-                              onClick={(e) => handleUrlClick(e)}
-                              title="Scrape Website"
-                            >
-                              <Link className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-4 w-6 p-0 text-gray-400 hover:text-white hover:bg-gray-600"
-                              onClick={(e) => handleUploadClick(e)}
-                              title="Upload Document"
-                            >
-                              <Upload className="h-4 w-4" />
-                            </Button>
+                          <div className="flex items-center space-x-2 mt-0.5">
+                            <p className="text-xs text-gray-400">
+                              {workspace.fileCount} {workspace.fileCount === 1 ? 'file' : 'files'}
+                            </p>
+                            <Tooltip.Provider delayDuration={0}>
+                              <div className="flex gap-2">
+                                <Tooltip.Root>
+                                  <Tooltip.Trigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className={`h-4 w-6 p-0 ${isSelected ? "text-gray-400 hover:text-white hover:bg-gray-600" : "text-gray-600 cursor-not-allowed"}`}
+                                      onClick={(e) => {
+                                        if (isSelected) handleHistoryClick(workspace, e);
+                                        e.stopPropagation();
+                                      }}
+                                      disabled={!isSelected}
+                                    >
+                                      <History className="h-4 w-6" />
+                                    </Button>
+                                  </Tooltip.Trigger>
+                                  <Tooltip.Content
+                                    side="top"
+                                    className="rounded bg-black px-2 py-1 text-xs text-white"
+                                    sideOffset={5}
+                                  >
+                                    View History
+                                  </Tooltip.Content>
+                                </Tooltip.Root>
 
+                                <Tooltip.Root>
+                                  <Tooltip.Trigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className={`h-4 w-6 p-0 ${isSelected ? "text-gray-400 hover:text-white hover:bg-gray-600" : "text-gray-600 cursor-not-allowed"}`}
+                                      onClick={(e) => {
+                                        if (isSelected) handleUrlClick(e);
+                                        e.stopPropagation();
+                                      }}
+                                      disabled={!isSelected}
+                                    >
+                                      <Link className="h-4 w-6" />
+                                    </Button>
+                                  </Tooltip.Trigger>
+                                  <Tooltip.Content
+                                    side="top"
+                                    className="rounded bg-black px-2 py-1 text-xs text-white"
+                                    sideOffset={5}
+                                  >
+                                    Scrape Website
+                                  </Tooltip.Content>
+                                </Tooltip.Root>
+
+                                <Tooltip.Root>
+                                  <Tooltip.Trigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className={`h-4 w-6 p-0 ${isSelected ? "text-gray-400 hover:text-white hover:bg-gray-600" : "text-gray-600 cursor-not-allowed"}`}
+                                      onClick={(e) => {
+                                        if (isSelected) handleUploadClick(e);
+                                        e.stopPropagation();
+                                      }}
+                                      disabled={!isSelected}
+                                    >
+                                      <Upload className="h-4 w-6" />
+                                    </Button>
+                                  </Tooltip.Trigger>
+                                  <Tooltip.Content
+                                    side="top"
+                                    className="rounded bg-black px-2 py-1 text-xs text-white"
+                                    sideOffset={5}
+                                  >
+                                    Upload Document
+                                  </Tooltip.Content>
+                                </Tooltip.Root>
+                              </div>
+                            </Tooltip.Provider>
                             {/* Dropdown */}
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  className="h-6 w-6 p-0 text-gray-400 hover:text-white hover:bg-gray-600"
+                                  className="h-4 w-6 p-0 text-gray-400 hover:text-white hover:bg-gray-600"
                                 >
                                   <MoreVertical className="h-4 w-4" />
                                 </Button>

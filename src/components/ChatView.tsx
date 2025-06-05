@@ -43,6 +43,8 @@ const ChatView = ({
 
   const [queries, setQueries] = useState<Record<number, string>>({});
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  // Fix: Use workspace-specific loading state to prevent ghost loading states
+  const [workspaceLoadingStates, setWorkspaceLoadingStates] = useState<Record<number, boolean>>({});
   const [expandedSources, setExpandedSources] = useState<
     Record<string, boolean>
   >({});
@@ -56,6 +58,19 @@ const ChatView = ({
   const hasDocuments = currentSessionDocuments.length > 0;
 
   const filteredMessages = chatMessages[workspaceId] || [];
+
+  // Get workspace-specific loading state
+  const isWorkspaceLoading = workspaceLoadingStates[workspaceId] || false;
+
+  // Clear workspace loading state when switching workspaces
+  useEffect(() => {
+    if (!loading && workspaceLoadingStates[workspaceId]) {
+      setWorkspaceLoadingStates(prev => ({
+        ...prev,
+        [workspaceId]: false
+      }));
+    }
+  }, [loading, workspaceId, workspaceLoadingStates]);
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -103,7 +118,13 @@ const ChatView = ({
       return;
     }
 
-    // Clear input immediately
+    // Set workspace-specific loading state
+    setWorkspaceLoadingStates(prev => ({
+      ...prev,
+      [workspaceId]: true
+    }));
+
+    // Clear input
     setQueries((prev) => ({ ...prev, [workspaceId]: "" }));
 
     try {
@@ -113,6 +134,12 @@ const ChatView = ({
       toast.error("Failed to send message");
       // Restore text on error
       setQueries((prev) => ({ ...prev, [workspaceId]: currentQuery }));
+    } finally {
+      // Clear workspace-specific loading state
+      setWorkspaceLoadingStates(prev => ({
+        ...prev,
+        [workspaceId]: false
+      }));
     }
   };
 
@@ -233,8 +260,8 @@ const ChatView = ({
           </div>
         )}
 
-        {/* Only show loading indicator for the current workspace when loading */}
-        {loading && (
+        {/* Only show loading indicator for the current workspace */}
+        {isWorkspaceLoading && (
           <div className="flex justify-start">
             <div className="bg-gray-800 text-white px-5 py-3 rounded-xl animate-pulse flex gap-2">
               <div className="w-2 h-2 rounded-full bg-white" />
@@ -294,7 +321,7 @@ const ChatView = ({
           <Button
             variant="default"
             onClick={handleSendMessage}
-            disabled={loading}
+            disabled={isWorkspaceLoading}
             className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-4 py-2 shadow-md text-sm"
           >
             <Send className="w-4 h-4" />
