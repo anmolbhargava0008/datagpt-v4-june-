@@ -1,21 +1,21 @@
 version: "3.9"
 
 services:
-  sbi-salesadvisor:
+  si-datagpt-ui:
     build:
       context: .
       dockerfile: Dockerfile
-    image: sbi-salesadvisor-ui:latest
-    container_name: sbi-salesadvisor-ui
+    image: si-datagpt-ui-ui:latest
+    container_name: si-datagpt-ui-ui
     ports:
-      - "9898:9898"
+      - "9797:9797"
     restart: unless-stopped
     depends_on:
       - backend
 
   backend:
-    image: sbi-salesadvisor:latest
-    container_name: sbi-salesadvisor
+    image: si-datagpt-ui:latest
+    container_name: si-datagpt-ui
     ports:
-      - "9898:9898"
+      - "9797:9797"
     restart: unless-stopped

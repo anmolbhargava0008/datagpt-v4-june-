@@ -92,7 +92,7 @@ const handleScrapeUrl = async () => {
         <DialogHeader>
           <DialogTitle>Scrape Website</DialogTitle>
           <DialogDescription>
-            Enter a URL to scrape and analyze with SalesAdvisor
+            Enter a URL to scrape and analyze with DataGpt
           </DialogDescription>
         </DialogHeader>
 
