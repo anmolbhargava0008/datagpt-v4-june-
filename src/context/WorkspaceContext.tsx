@@ -940,6 +940,7 @@ export const WorkspaceProvider = ({ children }: { children: ReactNode }) => {
         timestamp: Date.now(),
       };
   
+      // Add user message to the specific workspace
       setChatMessages((prev) => {
         const workspaceMessages = prev[workspaceId] || [];
         return {
@@ -995,6 +996,7 @@ export const WorkspaceProvider = ({ children }: { children: ReactNode }) => {
         sources: response.sources,
       };
   
+      // Add bot message to the ORIGINAL workspace (not the currently selected one)
       setChatMessages((prev) => {
         const workspaceMessages = prev[workspaceId] || [];
         return {
@@ -1032,7 +1034,7 @@ export const WorkspaceProvider = ({ children }: { children: ReactNode }) => {
       setError(errorMessage);
       toast.error(errorMessage);
   
-      // Add error message as bot response
+      // Add error message as bot response to the ORIGINAL workspace
       const errorBotMessage: ChatMessage = {
         id: uuidv4(),
         content: err instanceof Error ? err.message : "Sorry, I couldn't process your request. Please try again later.",
