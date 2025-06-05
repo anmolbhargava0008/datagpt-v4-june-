@@ -15,7 +15,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import logoWhite from "./../../public/icons/logo-white.png";
+import logo from "./../../public/icons/logo-light1.png";
 
 const formSchema = z.object({
   user_name: z.string().min(2, {
@@ -58,7 +58,7 @@ const SignupPage = () => {
         gender: "OTHER", // Default gender since it's not collected in UI
         is_active: true,
       });
-      
+
       if (success) {
         navigate("/signin");
       }
@@ -68,111 +68,105 @@ const SignupPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-      <div className="w-full max-w-md space-y-8 p-8 bg-gray-800 rounded-lg shadow-xl border border-gray-700">
-        <div className="flex justify-center">
-          <img src={logoWhite} alt="Logo" className="w-64 h-auto mb-6" />
+    <div className="h-screen overflow-y-auto flex items-center justify-center bg-gray-50 p-4">
+      <div className="w-full max-w-md space-y-8">
+      <div className="text-center">
+          <img src={logo} alt="logo" className="mx-auto w-80 h-auto" />
         </div>
-        
-        <h1 className="text-2xl font-bold tracking-tight text-white text-center">
-          Create an account
-        </h1>
-        <p className="text-sm text-gray-400 text-center">
-          Enter your details to get started with DataGpt
-        </p>
-        
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <FormField
-              control={form.control}
-              name="user_name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-gray-300">Name</FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="John Doe" 
-                      {...field}
-                      className="bg-gray-700 text-white border-gray-600 focus-visible:ring-[#A259FF]" 
-                    />
-                  </FormControl>
-                  <FormMessage className="text-red-400" />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="user_email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-gray-300">Email</FormLabel>
-                  <FormControl>
-                    <Input 
-                      type="email" 
-                      placeholder="john@example.com" 
-                      {...field} 
-                      className="bg-gray-700 text-white border-gray-600 focus-visible:ring-[#A259FF]"
-                    />
-                  </FormControl>
-                  <FormMessage className="text-red-400" />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="user_mobile"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-gray-300">Phone Number</FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="123-456-7890" 
-                      {...field} 
-                      className="bg-gray-700 text-white border-gray-600 focus-visible:ring-[#A259FF]"
-                    />
-                  </FormControl>
-                  <FormMessage className="text-red-400" />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-gray-300">Password</FormLabel>
-                  <FormControl>
-                    <Input 
-                      type="password" 
-                      {...field} 
-                      className="bg-gray-700 text-white border-gray-600 focus-visible:ring-[#A259FF]"
-                    />
-                  </FormControl>
-                  <FormMessage className="text-red-400" />
-                </FormItem>
-              )}
-            />
-            
-            <Button 
-              type="submit" 
-              className="w-full bg-[#A259FF] hover:bg-[#A259FF]/90" 
-              disabled={isLoading}
-            >
-              {isLoading ? "Creating account..." : "Create account"}
-            </Button>
-          </form>
-        </Form>
-        
-        <div className="text-center mt-4">
-          <p className="text-sm text-gray-400">
-            Already have an account?{" "}
-            <Link to="/signin" className="text-[#A259FF] hover:underline">
-              Sign in
-            </Link>
+
+        <div className="bg-white p-8 rounded-lg shadow-md">
+          <p className="text-center mb-4 text-gray-600">
+            Enter your details to get started with DataGpt
           </p>
+
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <FormField
+                control={form.control}
+                name="user_name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-center mb-4 text-gray-600">Name</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="John Doe"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage className="text-red-400" />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="user_email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-center mb-4 text-gray-600">Email</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="email"
+                        placeholder="john@example.com"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage className="text-red-400" />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="user_mobile"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-center mb-4 text-gray-600">Phone Number</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="123-456-7890"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage className="text-red-400" />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-center mb-4 text-gray-600">Password</FormLabel>
+                    <FormControl>
+                      <Input type="password" placeholder="******" {...field} />
+                    </FormControl>
+                    <FormMessage className="text-red-400" />
+                  </FormItem>
+                )}
+              />
+
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={isLoading}
+              >
+                {isLoading ? "Creating account..." : "Create account"}
+              </Button>
+            </form>
+          </Form>
+
+          <div className="mt-6 text-center text-sm">
+            <p className="text-gray-600">
+              Already have an account?{" "}
+              <Link to="/signin"
+                className="text-primary font-semibold hover:underline"
+              >
+                Sign in
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
     </div>

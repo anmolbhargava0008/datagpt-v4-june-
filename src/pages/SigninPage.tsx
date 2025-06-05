@@ -68,7 +68,7 @@ const SigninPage = () => {
                 name="user_email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel className="text-center mb-4 text-gray-600">Email</FormLabel>
                     <FormControl>
                       <Input
                         placeholder="email@example.com"
@@ -86,7 +86,7 @@ const SigninPage = () => {
                 name="user_pwd"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Password</FormLabel>
+                    <FormLabel className="text-center mb-4 text-gray-600">Password</FormLabel>
                     <FormControl>
                       <Input type="password" placeholder="******" {...field} />
                     </FormControl>
