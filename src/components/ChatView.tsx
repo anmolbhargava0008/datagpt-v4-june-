@@ -1,12 +1,15 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { useWorkspace } from "@/context/WorkspaceContext";
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { Button } from "@/components/ui/button";
 import { Send, Upload, FileText, Link, ClipboardCopy } from "lucide-react";
 import { toast } from "sonner";
 import { ChatMessage, LLMSource } from "@/types/api";
 import SessionIndicator from "./SessionIndicator";
 import FreeTierModal from "./FreeTierModal";
+import markdownComponents from "./Markdown";
 import {
   Dialog,
   DialogContent,
@@ -55,7 +58,7 @@ const ChatView = ({
   const hasDocuments = currentSessionDocuments.length > 0;
 
   const filteredMessages = chatMessages[workspaceId] || [];
-  
+
   // Get workspace-specific loading state
   const isWorkspaceLoading = workspaceLoadingStates[workspaceId] || false;
 
@@ -120,7 +123,7 @@ const ChatView = ({
       ...prev,
       [workspaceId]: true
     }));
-    
+
     // Clear input
     setQueries((prev) => ({ ...prev, [workspaceId]: "" }));
 
@@ -170,9 +173,8 @@ const ChatView = ({
           <span>{isExpanded ? "Hide Citations" : "Show Citations"}</span>
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            className={`h-4 w-4 ml-1 transition-transform ${
-              isExpanded ? "rotate-180" : ""
-            }`}
+            className={`h-4 w-4 ml-1 transition-transform ${isExpanded ? "rotate-180" : ""
+              }`}
             viewBox="0 0 20 20"
             fill="currentColor"
           >
@@ -221,18 +223,18 @@ const ChatView = ({
           filteredMessages.map((msg) => (
             <div
               key={msg.id}
-              className={`flex ${
-                msg.type === "user" ? "justify-end" : "justify-start"
-              }`}
+              className={`flex ${msg.type === "user" ? "justify-end" : "justify-start"
+                }`}
             >
               <div
-                className={`relative max-w-3xl px-5 py-4 rounded-2xl text-sm leading-relaxed ${
-                  msg.type === "user"
-                    ? "bg-gradient-to-br from-blue-600 to-blue-500 text-white"
-                    : "bg-gray-800 text-gray-100"
-                } shadow-[0_-3px_6px_rgba(0,0,0,0.1),0_3px_6px_rgba(0,0,0,0.1),-3px_0_6px_rgba(0,0,0,0.1),3px_0_6px_rgba(0,0,0,0.1)]`}
+                className={`relative max-w-4xl px-5 py-4 rounded-2xl text-sm leading-relaxed ${msg.type === "user"
+                  ? "bg-gradient-to-br from-blue-600 to-blue-500 text-white"
+                  : "bg-gray-800 text-gray-100"
+                  } shadow-[0_-3px_6px_rgba(0,0,0,0.1),0_3px_6px_rgba(0,0,0,0.1),-3px_0_6px_rgba(0,0,0,0.1),3px_0_6px_rgba(0,0,0,0.1)]`}
               >
-                <div className="whitespace-pre-wrap">{msg.content}</div>
+                <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
+                  {msg.content}
+                </ReactMarkdown>
                 {msg.type === "bot" && (
                   <>
                     <button

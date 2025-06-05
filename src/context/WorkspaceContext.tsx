@@ -627,13 +627,11 @@ export const WorkspaceProvider = ({ children }: { children: ReactNode }) => {
       const sessionResponse = await llmApi.startSession();
 
       if (!sessionResponse.success || !sessionResponse.session_id) {
-        toast.error("Failed to initialize the AI session");
+        toast.error("Server Down: Failed to initialize the session");
         return;
       }
 
       const sessionId = sessionResponse.session_id;
-
-      console.log(`Created new session ID: ${sessionId}`);
 
       // Then, create the workspace in the backend, including the session_id
       const newWorkspace: Workspace = {
@@ -644,7 +642,6 @@ export const WorkspaceProvider = ({ children }: { children: ReactNode }) => {
       };
 
       const response = await workspaceApi.create(newWorkspace);
-      console.log("Create response:", response);
 
       const workspaceData = Array.isArray(response.data)
         ? response.data[0]
@@ -669,9 +666,6 @@ export const WorkspaceProvider = ({ children }: { children: ReactNode }) => {
           [workspaceData.ws_id]: []
         }));
 
-        console.log(
-          `Associated session ID ${sessionId} with workspace ${workspaceData.ws_id}`
-        );
         toast.success("Workspace created successfully");
 
         await refreshWorkspaces();

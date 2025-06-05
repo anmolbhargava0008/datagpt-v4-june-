@@ -72,8 +72,8 @@ const Sidebar = () => {
 
   const filteredWorkspaces = searchQuery
     ? workspaces.filter((ws) =>
-        ws.ws_name.toLowerCase().includes(searchQuery.toLowerCase())
-      )
+      ws.ws_name.toLowerCase().includes(searchQuery.toLowerCase())
+    )
     : workspaces;
 
   const checkFreeTierAccess = (): boolean => {
@@ -196,122 +196,122 @@ const Sidebar = () => {
                 const workspaceHasUrl = isSelected
                   ? hasUrlScraped
                   : hasHistory && !workspaceHasPdf;
-
                 return (
                   <div
                     key={wsId}
                     onClick={() => handleWorkspaceClick(workspace)}
-                    className={`flex items-start justify-between p-2 rounded-md cursor-pointer group transition-colors duration-200 ${
-                      isSelected
-                        ? "bg-gray-700 border-l-4 border-[#A259FF]"
-                        : "hover:bg-gray-700 border-l-4 border-transparent"
-                    }`}
+                    className={`flex items-center justify-between p-1 rounded-md cursor-pointer group transition-colors duration-200 ${isSelected
+                      ? "bg-gray-700 border-l-4 border-[#A259FF]"
+                      : "hover:bg-gray-700 border-l-4 border-transparent"
+                      }`}
                   >
+                    {/* Left Side: Workspace info */}
                     <div className="flex items-start space-x-2">
                       {workspaceHasUrl && workspaceHasPdf ? (
-                        // If both file and URL are present
                         <div className="flex items-center space-x-0.5">
                           <FileText
-                            className={`h-4 w-4 mt-0.5 ${
-                              isSelected ? "text-[#A259FF]" : "text-gray-400"
-                            }`}
+                            className={`h-4 w-4 mt-0.5 ${isSelected ? "text-[#A259FF]" : "text-gray-400"
+                              }`}
                           />
                           <Link
-                            className={`h-4 w-4 mt-0.5 ${
-                              isSelected ? "text-[#A259FF]" : "text-gray-400"
-                            }`}
+                            className={`h-4 w-4 mt-0.5 ${isSelected ? "text-[#A259FF]" : "text-gray-400"
+                              }`}
                           />
                         </div>
                       ) : workspaceHasUrl ? (
-                        // Only URL present
                         <Link
-                          className={`h-4 w-4 mt-0.5 ${
-                            isSelected ? "text-[#A259FF]" : "text-gray-400"
-                          }`}
+                          className={`h-4 w-4 mt-0.5 ${isSelected ? "text-[#A259FF]" : "text-gray-400"
+                            }`}
                         />
                       ) : (
-                        // Only file present
                         <FileText
-                          className={`h-4 w-4 mt-0.5 ${
-                            isSelected ? "text-[#A259FF]" : "text-gray-400"
-                          }`}
+                          className={`h-4 w-4 mt-0.5 ${isSelected ? "text-[#A259FF]" : "text-gray-400"
+                            }`}
                         />
                       )}
 
                       <div>
                         <p className="text-sm font-medium text-gray-200">
-                          {workspace.ws_name}
+                          <p className="text-sm font-medium text-gray-200">
+                            {workspace.ws_name.length > 20
+                              ? `${workspace.ws_name.slice(0, 25)}...`
+                              : workspace.ws_name}
+                          </p>
                         </p>
-                        <p className="text-xs text-gray-400 mt-0.5">
-                          {workspace.documents?.length || 0} files
-                        </p>
+                        <div className="flex items-center space-x-2 mt-0.5">
+                          {hasUrlScraped && (
+                            <p className="text-xs text-gray-400">
+                              It has files
+                            </p>
+                          )}
+                          {/* Buttons*/}
+                          <div className="flex items-center space-x-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 w-6 p-0 text-gray-400 hover:text-white hover:bg-gray-600"
+                              onClick={(e) => handleHistoryClick(workspace, e)}
+                              title="View History"
+                            >
+                              <History className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 w-6 p-0 text-gray-400 hover:text-white hover:bg-gray-600"
+                              onClick={(e) => handleUrlClick(e)}
+                              title="Scrape Website"
+                            >
+                              <Link className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-4 w-6 p-0 text-gray-400 hover:text-white hover:bg-gray-600"
+                              onClick={(e) => handleUploadClick(e)}
+                              title="Upload Document"
+                            >
+                              <Upload className="h-4 w-4" />
+                            </Button>
+
+                            {/* Dropdown */}
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-6 w-6 p-0 text-gray-400 hover:text-white hover:bg-gray-600"
+                                >
+                                  <MoreVertical className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent
+                                align="end"
+                                className="w-40 bg-gray-800 text-gray-200 border-gray-700"
+                              >
+                                <DropdownMenuItem
+                                  onClick={(e) => handleEditClick(workspace, e)}
+                                  className="focus:bg-gray-700 focus:text-white"
+                                >
+                                  <Edit className="mr-2 h-4 w-4" />
+                                  <span>Edit</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator className="bg-gray-700" />
+                                <DropdownMenuItem
+                                  className="text-red-400 focus:text-red-300 focus:bg-gray-700"
+                                  onClick={(e) => handleDeleteClick(workspace, e)}
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  <span>Delete</span>
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </div>
                       </div>
                     </div>
-
-                    <div className="flex items-center">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-white hover:bg-gray-600"
-                        onClick={(e) => handleHistoryClick(workspace, e)}
-                        title="View History"
-                      >
-                        <History className="h-4 w-4" />
-                      </Button>
-
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-white hover:bg-gray-600"
-                        onClick={(e) => handleUrlClick(e)}
-                        title="Scrape Website"
-                      >
-                        <Link className="h-4 w-4" />
-                      </Button>
-
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-white hover:bg-gray-600"
-                        onClick={(e) => handleUploadClick(e)}
-                        title="Upload Document"
-                      >
-                        <Upload className="h-4 w-4" />
-                      </Button>
-
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-white hover:bg-gray-600"
-                          >
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent
-                          align="end"
-                          className="w-40 bg-gray-800 text-gray-200 border-gray-700"
-                        >
-                          <DropdownMenuItem
-                            onClick={(e) => handleEditClick(workspace, e)}
-                            className="focus:bg-gray-700 focus:text-white"
-                          >
-                            <Edit className="mr-2 h-4 w-4" />
-                            <span>Edit</span>
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator className="bg-gray-700" />
-                          <DropdownMenuItem
-                            className="text-red-400 focus:text-red-300 focus:bg-gray-700"
-                            onClick={(e) => handleDeleteClick(workspace, e)}
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            <span>Delete</span>
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
                   </div>
+
                 );
               })}
             </div>

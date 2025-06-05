@@ -1,5 +1,5 @@
 // API endpoints
-export const API_BASE_URL = "http://15.206.121.90:1909/";
+export const API_BASE_URL = "http://15.206.121.90:1909";
 export const LLM_API_BASE_URL = "http://15.206.121.90:8000";
 
 // LLM API endpoints
