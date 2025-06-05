@@ -730,9 +730,53 @@ export const WorkspaceProvider = ({ children }: { children: ReactNode }) => {
     try {
       setLoading(true);
 
+      // Get the session ID for this workspace before deleting
+      const sessionId = sessionIds[wsId];
+
       const response = await workspaceApi.delete(wsId);
 
       if (response.success) {
+        // If workspace deletion was successful and we have a session ID, delete the LLM session
+        if (sessionId) {
+          try {
+            const sessionDeleteResult = await llmApi.deleteSession(sessionId);
+            if (sessionDeleteResult.success) {
+              console.log(`Successfully deleted LLM session ${sessionId}`);
+            } else {
+              console.error(`Failed to delete LLM session ${sessionId}`);
+            }
+          } catch (sessionErr) {
+            console.error("Error deleting LLM session:", sessionErr);
+            // Don't fail the entire operation if session deletion fails
+          }
+
+          // Clean up local session data
+          setSessionIds((prev) => {
+            const updated = { ...prev };
+            delete updated[wsId];
+            return updated;
+          });
+
+          setSessionTypes((prev) => {
+            const updated = { ...prev };
+            delete updated[wsId];
+            return updated;
+          });
+
+          setSessionDocuments((prev) => {
+            const updated = { ...prev };
+            delete updated[wsId];
+            return updated;
+          });
+
+          // Clear chat messages for this workspace
+          setChatMessages((prev) => {
+            const updated = { ...prev };
+            delete updated[wsId];
+            return updated;
+          });
+        }
+
         if (selectedWorkspace && selectedWorkspace.ws_id === wsId) {
           setSelectedWorkspace(null);
         }

@@ -6,7 +6,8 @@ import {
   LLM_UPLOAD_PDF_ENDPOINT, 
   LLM_ASK_QUESTION_ENDPOINT,
   LLM_LIST_FILES_ENDPOINT,
-  LLM_SCRAPE_URL_ENDPOINT
+  LLM_SCRAPE_URL_ENDPOINT,
+  LLM_DELETE_SESSION_ENDPOINT
 } from "@/constants/api";
 
 export const llmApi = {
@@ -186,6 +187,27 @@ export const llmApi = {
       };
     } catch (error) {
       console.error("Error scraping URL with LLM API:", error);
+      return { success: false };
+    }
+  },
+
+  deleteSession: async (sessionId: string): Promise<{ success: boolean; message?: string }> => {
+    try {
+      const response = await fetch(`${LLM_DELETE_SESSION_ENDPOINT}${sessionId}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to delete session with LLM API");
+      }
+
+      const data = await response.json();
+      return {
+        success: true,
+        message: data.message || "Session deleted successfully"
+      };
+    } catch (error) {
+      console.error("Error deleting session with LLM API:", error);
       return { success: false };
     }
   }
