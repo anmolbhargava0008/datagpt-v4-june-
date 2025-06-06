@@ -228,8 +228,8 @@ const ChatView = ({
             >
               <div
                 className={`relative max-w-4xl px-5 py-4 rounded-2xl text-sm leading-relaxed ${msg.type === "user"
-                  ? "bg-gradient-to-br from-blue-600 to-blue-500 text-white"
-                  : "bg-gray-800 text-gray-100"
+                  ? "bg-gradient-to-br bg-gradient-to-br from-purple-500 to-indigo-600	hover:bg-[#A259FF]/90 text-[#fff]-700"
+                  : "bg-gray-800"
                   } shadow-[0_-3px_6px_rgba(0,0,0,0.1),0_3px_6px_rgba(0,0,0,0.1),-3px_0_6px_rgba(0,0,0,0.1),3px_0_6px_rgba(0,0,0,0.1)]`}
               >
                 <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
@@ -274,7 +274,7 @@ const ChatView = ({
       </div>
 
       {/* Input area */}
-      <div className="bg-gray-600 mb-2 p-2 w-[80%] mx-auto flex flex-col gap-2 rounded-xl">
+      <div className="bg-gray-600 mb-2 p-2 w-[80%] mx-auto flex flex-col rounded-xl">
         <div className="relative">
           <textarea
             ref={inputRef}
@@ -286,8 +286,8 @@ const ChatView = ({
               autoResize();
             }}
             onKeyDown={handleKeyPress}
-            className="w-full resize-none bg-transparent text-gray-100 border-none focus:outline-none focus:ring-0 rounded-xl px-4 py-3 min-h-[40px] max-h-48 overflow-y-auto scroll-thin scrollbar-thumb-gray-700 scrollbar-track-transparent placeholder:text-gray-400"
-          />
+            className="w-full resize-none bg-transparent text-gray-100 border-none focus:outline-none focus:ring-0 rounded-xl px-3 min-h-[36px] max-h-48 overflow-y-auto scroll-thin scrollbar-thumb-gray-700 scrollbar-track-transparent placeholder:text-gray-400"
+            />
         </div>
 
         {/* Buttons */}
@@ -322,8 +322,8 @@ const ChatView = ({
             variant="default"
             onClick={handleSendMessage}
             disabled={isWorkspaceLoading}
-            className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-4 py-2 shadow-md text-sm"
-          >
+            className="bg-[#A259FF] hover:bg-[#A259FF]/90 text-white rounded-md h-9 shadow-sm flex items-center justify-center"
+            >
             <Send className="w-4 h-4" />
           </Button>
         </div>
