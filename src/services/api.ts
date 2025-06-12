@@ -25,6 +25,9 @@ export const workspaceApi = {
   },
 
   create: async (workspace: Workspace & { session_id?: string }): Promise<ApiResponse<Workspace>> => {
+    // Get current date in YYYY-MM-DD format
+    const currentDate = new Date().toISOString().split('T')[0];
+    
     const response = await fetch(`${API_BASE_URL}/api/v1/workspaces`, {
       method: "POST",
       headers: {
@@ -34,6 +37,7 @@ export const workspaceApi = {
         ...workspace,
         user_id: workspace.user_id || DEFAULT_USER_ID,
         is_active: true,
+        ws_date: currentDate,
         // Include session_id if provided
         ...(workspace.session_id && { session_id: workspace.session_id }),
       }),

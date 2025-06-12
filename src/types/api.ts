@@ -1,10 +1,10 @@
-
 export interface Workspace {
   ws_id?: number;
   ws_name: string;
   user_id: number;
   is_active: boolean;
   session_id?: string;
+  ws_date?: string;
 }
 
 export interface Document {
