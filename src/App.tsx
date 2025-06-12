@@ -22,33 +22,35 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <ThemeProvider defaultTheme="dark">
-        <BrowserRouter>
-          <AuthProvider>
-            <Toaster />
-            <Sonner />
-            <Routes>
-              {/* Public routes */}
-              <Route element={<AuthLayout />}>
-                <Route path="/signin" element={<SigninPage />} />
-                <Route path="/signup" element={<SignupPage />} />
-              </Route>
+        <div className="min-h-screen w-full">
+          <BrowserRouter>
+            <AuthProvider>
+              <Toaster />
+              <Sonner />
+              <Routes>
+                {/* Public routes */}
+                <Route element={<AuthLayout />}>
+                  <Route path="/signin" element={<SigninPage />} />
+                  <Route path="/signup" element={<SignupPage />} />
+                </Route>
 
-              {/* Protected routes with persistent layout */}
-              <Route element={<AuthLayout protected withHeader />}>
-                <Route path="/dashboard" element={<MainLayout><DashboardContent /></MainLayout>} />
-                <Route path="/workspace" element={<MainLayout><WorkspaceContent /></MainLayout>} />
-                <Route path="/workspace/:wsId" element={<MainLayout><WorkspaceContent /></MainLayout>} />
-                <Route path="/usermanagement" element={<MainLayout><UserManagementContent /></MainLayout>} />
-              </Route>
+                {/* Protected routes with persistent layout */}
+                <Route element={<AuthLayout protected withHeader />}>
+                  <Route path="/dashboard" element={<MainLayout><DashboardContent /></MainLayout>} />
+                  <Route path="/workspace" element={<MainLayout><WorkspaceContent /></MainLayout>} />
+                  <Route path="/workspace/:wsId" element={<MainLayout><WorkspaceContent /></MainLayout>} />
+                  <Route path="/usermanagement" element={<MainLayout><UserManagementContent /></MainLayout>} />
+                </Route>
 
-              {/* Redirect route */}
-              <Route path="/" element={<Index />} />
+                {/* Redirect route */}
+                <Route path="/" element={<Index />} />
 
-              {/* Catch-all */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </AuthProvider>
-        </BrowserRouter>
+                {/* Catch-all */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </AuthProvider>
+          </BrowserRouter>
+        </div>
       </ThemeProvider>
     </TooltipProvider>
   </QueryClientProvider>

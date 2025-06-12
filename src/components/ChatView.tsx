@@ -18,6 +18,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { useAuth } from "@/context/AuthContext";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ChatViewProps {
   workspaceId: number;
@@ -33,6 +34,7 @@ const ChatView = ({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isFreeTierModalOpen, setIsFreeTierModalOpen] = useState(false);
   const { isAppValid } = useAuth();
+  const isMobile = useIsMobile();
   const {
     sendMessage,
     chatMessages,
@@ -43,11 +45,8 @@ const ChatView = ({
 
   const [queries, setQueries] = useState<Record<number, string>>({});
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  // Fix: Use workspace-specific loading state to prevent ghost loading states
   const [workspaceLoadingStates, setWorkspaceLoadingStates] = useState<Record<number, boolean>>({});
-  const [expandedSources, setExpandedSources] = useState<
-    Record<string, boolean>
-  >({});
+  const [expandedSources, setExpandedSources] = useState<Record<string, boolean>>({});
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -58,8 +57,6 @@ const ChatView = ({
   const hasDocuments = currentSessionDocuments.length > 0;
 
   const filteredMessages = chatMessages[workspaceId] || [];
-
-  // Get workspace-specific loading state
   const isWorkspaceLoading = workspaceLoadingStates[workspaceId] || false;
 
   // Clear workspace loading state when switching workspaces
@@ -72,10 +69,13 @@ const ChatView = ({
     }
   }, [loading, workspaceId, workspaceLoadingStates]);
 
-  // Scroll to bottom on new messages
+  // Scroll to bottom on new messages with proper mobile handling
   useEffect(() => {
     const timeout = setTimeout(() => {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      messagesEndRef.current?.scrollIntoView({ 
+        behavior: "smooth",
+        block: "end"
+      });
     }, 100);
     return () => clearTimeout(timeout);
   }, [workspaceId, chatMessages]);
@@ -83,13 +83,15 @@ const ChatView = ({
   const autoResize = () => {
     if (inputRef.current) {
       inputRef.current.style.height = "auto";
-      inputRef.current.style.height = inputRef.current.scrollHeight + "px";
+      const maxHeight = isMobile ? 120 : 192; // 120px on mobile, 192px on desktop
+      const newHeight = Math.min(inputRef.current.scrollHeight, maxHeight);
+      inputRef.current.style.height = newHeight + "px";
     }
   };
 
   useEffect(() => {
     autoResize();
-  }, [queries[workspaceId]]);
+  }, [queries[workspaceId], isMobile]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
@@ -118,13 +120,11 @@ const ChatView = ({
       return;
     }
 
-    // Set workspace-specific loading state
     setWorkspaceLoadingStates(prev => ({
       ...prev,
       [workspaceId]: true
     }));
 
-    // Clear input
     setQueries((prev) => ({ ...prev, [workspaceId]: "" }));
 
     try {
@@ -132,10 +132,8 @@ const ChatView = ({
     } catch (error) {
       console.error(error);
       toast.error("Failed to send message");
-      // Restore text on error
       setQueries((prev) => ({ ...prev, [workspaceId]: currentQuery }));
     } finally {
-      // Clear workspace-specific loading state
       setWorkspaceLoadingStates(prev => ({
         ...prev,
         [workspaceId]: false
@@ -168,13 +166,13 @@ const ChatView = ({
       <div className="mt-2">
         <button
           onClick={() => toggleSources(messageId)}
-          className="text-sm text-gray-500 hover:text-gray-300 flex items-center"
+          className="text-sm text-gray-500 hover:text-gray-300 flex items-center min-h-[44px] px-2 py-1 rounded"
+          aria-label={isExpanded ? "Hide Citations" : "Show Citations"}
         >
           <span>{isExpanded ? "Hide Citations" : "Show Citations"}</span>
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            className={`h-4 w-4 ml-1 transition-transform ${isExpanded ? "rotate-180" : ""
-              }`}
+            className={`h-4 w-4 ml-1 transition-transform ${isExpanded ? "rotate-180" : ""}`}
             viewBox="0 0 20 20"
             fill="currentColor"
           >
@@ -191,15 +189,15 @@ const ChatView = ({
               <div key={src.source_id} className="mb-2 last:mb-0">
                 <div className="flex items-center text-blue-400">
                   {src.file.startsWith("http") ? (
-                    <Link className="h-4 w-4 mr-1" />
+                    <Link className="h-4 w-4 mr-1 flex-shrink-0" />
                   ) : (
-                    <FileText className="h-4 w-4 mr-1" />
+                    <FileText className="h-4 w-4 mr-1 flex-shrink-0" />
                   )}
-                  <span className="text-sm font-medium">
+                  <span className="text-sm font-medium break-words">
                     {src.file} {src.page && `(page ${src.page})`}
                   </span>
                 </div>
-                <p className="text-sm text-gray-300 mt-1 pl-5">{src.summary}</p>
+                <p className="text-sm text-gray-300 mt-1 pl-5 break-words">{src.summary}</p>
               </div>
             ))}
           </div>
@@ -216,87 +214,92 @@ const ChatView = ({
   };
 
   return (
-    <div className="flex flex-col h-full bg-gray-800">
-      {/* Chat messages */}
-      <div className="flex-grow overflow-y-auto px-4 py-6 space-y-6">
-        {hasChatHistory ? (
-          filteredMessages.map((msg) => (
-            <div
-              key={msg.id}
-              className={`flex ${msg.type === "user" ? "justify-end" : "justify-start"
-                }`}
-            >
+    <div className="flex flex-col h-full bg-gray-800 relative">
+      {/* Chat messages with proper mobile spacing */}
+      <div className="flex-grow overflow-y-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
+        <div className={`max-w-none ${isMobile ? '' : 'max-w-4xl mx-auto'} w-full`}>
+          {hasChatHistory ? (
+            filteredMessages.map((msg) => (
               <div
-                className={`relative max-w-4xl px-5 py-4 rounded-2xl text-sm leading-relaxed ${msg.type === "user"
-                  ? "bg-gradient-to-br bg-gradient-to-br from-purple-500 to-indigo-600	hover:bg-[#A259FF]/90 text-[#fff]-700"
-                  : "bg-gray-800"
-                  } shadow-[0_-3px_6px_rgba(0,0,0,0.1),0_3px_6px_rgba(0,0,0,0.1),-3px_0_6px_rgba(0,0,0,0.1),3px_0_6px_rgba(0,0,0,0.1)]`}
+                key={msg.id}
+                className={`flex mb-4 sm:mb-6 ${msg.type === "user" ? "justify-end" : "justify-start"}`}
               >
-                <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
-                  {msg.content}
-                </ReactMarkdown>
-                {msg.type === "bot" && (
-                  <>
-                    <button
-                      onClick={() => {
-                        navigator.clipboard.writeText(msg.content);
-                        toast.success("Response copied");
-                      }}
-                      className="absolute top-2 right-2 text-gray-400 hover:text-white"
-                      title="Copy response"
-                    >
-                      <ClipboardCopy className="h-4 w-4" />
-                    </button>
-                    {renderSources(msg.sources, msg.id)}
-                  </>
-                )}
+                <div
+                  className={`relative w-full sm:max-w-4xl px-4 sm:px-5 py-3 sm:py-4 rounded-2xl text-sm sm:text-base leading-relaxed ${
+                    msg.type === "user"
+                      ? "bg-gradient-to-br from-purple-500 to-indigo-600 hover:bg-[#A259FF]/90 text-white ml-4 sm:ml-12"
+                      : "bg-gray-800 text-white mr-4 sm:mr-12"
+                  } shadow-[0_-3px_6px_rgba(0,0,0,0.1),0_3px_6px_rgba(0,0,0,0.1),-3px_0_6px_rgba(0,0,0,0.1),3px_0_6px_rgba(0,0,0,0.1)]`}
+                >
+                  <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
+                    {msg.content}
+                  </ReactMarkdown>
+                  {msg.type === "bot" && (
+                    <>
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(msg.content);
+                          toast.success("Response copied");
+                        }}
+                        className="absolute top-2 right-2 text-gray-400 hover:text-white min-h-[44px] min-w-[44px] flex items-center justify-center rounded"
+                        title="Copy response"
+                        aria-label="Copy response"
+                      >
+                        <ClipboardCopy className="h-4 w-4" />
+                      </button>
+                      {renderSources(msg.sources, msg.id)}
+                    </>
+                  )}
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="flex flex-col items-center justify-center h-full text-gray-400 px-4">
+              <FileText className="h-12 sm:h-16 w-12 sm:w-16 mb-4 text-gray-500" />
+              <h2 className="text-xl sm:text-2xl font-semibold text-center">Start a conversation</h2>
+              <p className="text-sm sm:text-base text-center mt-2 max-w-md">
+                Upload a PDF or add a URL to begin chatting with your documents
+              </p>
+            </div>
+          )}
+
+          {isWorkspaceLoading && (
+            <div className="flex justify-start mb-4 sm:mb-6">
+              <div className="bg-gray-800 text-white px-4 sm:px-5 py-3 rounded-xl animate-pulse flex gap-2 mr-4 sm:mr-12">
+                <div className="w-2 h-2 rounded-full bg-white animate-bounce" style={{ animationDelay: '0ms' }} />
+                <div className="w-2 h-2 rounded-full bg-white animate-bounce" style={{ animationDelay: '150ms' }} />
+                <div className="w-2 h-2 rounded-full bg-white animate-bounce" style={{ animationDelay: '300ms' }} />
               </div>
             </div>
-          ))
-        ) : (
-          <div className="flex flex-col items-center justify-center h-full text-gray-400">
-            <FileText className="h-16 w-16 mb-4 text-gray-500" />
-            <h2 className="text-2xl font-semibold">Start a conversation</h2>
-          </div>
-        )}
-
-        {/* Only show loading indicator for the current workspace */}
-        {isWorkspaceLoading && (
-          <div className="flex justify-start">
-            <div className="bg-gray-800 text-white px-5 py-3 rounded-xl animate-pulse flex gap-2">
-              <div className="w-2 h-2 rounded-full bg-white" />
-              <div className="w-2 h-2 rounded-full bg-white" />
-              <div className="w-2 h-2 rounded-full bg-white" />
-            </div>
-          </div>
-        )}
+          )}
+        </div>
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input area */}
-      <div className="bg-gray-600 mb-2 p-2 w-[80%] mx-auto flex flex-col rounded-xl">
+      {/* Input area with mobile optimization */}
+      <div className="bg-gray-600 mb-2 mx-2 sm:mx-auto p-2 w-auto sm:w-[80%] max-w-4xl flex flex-col rounded-xl sticky bottom-2">
         <div className="relative">
           <textarea
             ref={inputRef}
             rows={1}
             placeholder="Ask anything related to the uploaded files or URLs."
             value={queries[workspaceId] || ""}
-            onChange={(e) => {
-              handleInputChange(e);
-              autoResize();
-            }}
+            onChange={handleInputChange}
             onKeyDown={handleKeyPress}
-            className="w-full resize-none bg-transparent text-gray-100 border-none focus:outline-none focus:ring-0 rounded-xl px-3 min-h-[36px] max-h-48 overflow-y-auto scroll-thin scrollbar-thumb-gray-700 scrollbar-track-transparent placeholder:text-gray-400"
-            />
+            className="w-full resize-none bg-transparent text-gray-100 border-none focus:outline-none focus:ring-0 rounded-xl px-3 py-2 min-h-[44px] text-base placeholder:text-gray-400 overflow-y-auto scroll-thin scrollbar-thumb-gray-700 scrollbar-track-transparent"
+            style={{ maxHeight: isMobile ? '120px' : '192px' }}
+            aria-label="Chat message input"
+          />
         </div>
 
-        {/* Buttons */}
-        <div className="flex justify-between gap-2 flex-wrap">
-          <div className="flex gap-2">
+        {/* Buttons with mobile-optimized layout */}
+        <div className="flex justify-between items-center gap-2 mt-2 flex-wrap">
+          <div className="flex gap-2 flex-wrap">
             <Button
               size="sm"
               onClick={() => setIsModalOpen(true)}
-              className="px-3 py-2 text-sm bg-gray-800 text-white hover:bg-gray-700 rounded-md"
+              className="px-3 py-2 text-xs sm:text-sm bg-gray-800 text-white hover:bg-gray-700 rounded-md min-h-[44px] transition-colors"
+              aria-label="View session information"
             >
               Session info
             </Button>
@@ -304,7 +307,8 @@ const ChatView = ({
               variant="ghost"
               size="icon"
               onClick={handleUploadClick}
-              className="hover:bg-gray-700 text-gray-300 p-2"
+              className="hover:bg-gray-700 text-gray-300 min-h-[44px] min-w-[44px] transition-colors"
+              aria-label="Upload PDF files"
             >
               <Upload className="w-4 h-4" />
             </Button>
@@ -312,7 +316,8 @@ const ChatView = ({
               variant="ghost"
               size="icon"
               onClick={handleUrlClick}
-              className="hover:bg-gray-700 text-gray-300 p-2"
+              className="hover:bg-gray-700 text-gray-300 min-h-[44px] min-w-[44px] transition-colors"
+              aria-label="Add URL"
             >
               <Link className="w-4 h-4" />
             </Button>
@@ -322,16 +327,17 @@ const ChatView = ({
             variant="default"
             onClick={handleSendMessage}
             disabled={isWorkspaceLoading}
-            className="bg-[#A259FF] hover:bg-[#A259FF]/90 text-white rounded-md h-9 shadow-sm flex items-center justify-center"
-            >
+            className="bg-[#A259FF] hover:bg-[#A259FF]/90 text-white rounded-md min-h-[44px] min-w-[44px] shadow-sm flex items-center justify-center transition-all duration-200 disabled:opacity-50"
+            aria-label="Send message"
+          >
             <Send className="w-4 h-4" />
           </Button>
         </div>
       </div>
 
-      {/* Session Modal */}
+      {/* Session Modal with mobile responsiveness */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="sm:max-w-md bg-gray-900 text-white">
+        <DialogContent className={`${isMobile ? 'mx-4 max-w-[calc(100vw-2rem)]' : 'sm:max-w-md'} bg-gray-900 text-white`}>
           <DialogHeader>
             <DialogTitle>Current Session</DialogTitle>
           </DialogHeader>
@@ -344,7 +350,12 @@ const ChatView = ({
           />
 
           <DialogFooter>
-            <Button onClick={() => setIsModalOpen(false)}>Close</Button>
+            <Button 
+              onClick={() => setIsModalOpen(false)}
+              className="min-h-[44px] transition-colors"
+            >
+              Close
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
