@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { useWorkspace } from "@/context/WorkspaceContext";
 import ReactMarkdown from 'react-markdown';
@@ -70,24 +69,27 @@ const ChatView = ({
     .filter(msg => msg.type === "bot")
     .slice(-1)[0];
 
-  // Only trigger typewriter for the message we're awaiting AND when loading just finished
+  // Start typewriter effect immediately when a new message arrives (while still loading)
   useEffect(() => {
     if (isAwaitingNewMessage[workspaceId] && 
-        !loading && 
         latestBotMessage && 
         typewriterMessageId !== latestBotMessage.id) {
       
       setTypewriterMessageId(latestBotMessage.id);
       setTypewriterText("");
       setTypewriterIndex(0);
-      
-      // Clear the awaiting flag since we're now processing the response
+    }
+  }, [latestBotMessage?.id, isAwaitingNewMessage, workspaceId, typewriterMessageId]);
+
+  // Clear awaiting flag when loading finishes
+  useEffect(() => {
+    if (!loading && isAwaitingNewMessage[workspaceId]) {
       setIsAwaitingNewMessage(prev => ({
         ...prev,
         [workspaceId]: false
       }));
     }
-  }, [loading, latestBotMessage?.id, isAwaitingNewMessage, workspaceId, typewriterMessageId]);
+  }, [loading, workspaceId, isAwaitingNewMessage]);
 
   // Typewriter animation logic
   useEffect(() => {
@@ -354,7 +356,9 @@ const ChatView = ({
                   >
                     {msg.type === "bot" && typewriterMessageId === msg.id 
                       ? typewriterText
-                      : msg.content
+                      : msg.type === "bot" && typewriterMessageId === msg.id 
+                        ? "" // Show nothing while typewriter is setting up
+                        : msg.content
                     }
                   </ReactMarkdown>
 
