@@ -116,8 +116,8 @@ export const llmApi = {
         sources: [
           {
             source_id: uuidv4(),
-            summary: "This is a mock summary of the document.",
-            file: "sample_document.pdf",
+            summary: "No docs found",
+            file: "",
             page: 5,
           },
         ],

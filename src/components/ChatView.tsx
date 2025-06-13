@@ -72,7 +72,7 @@ const ChatView = ({
   // Scroll to bottom on new messages with proper mobile handling
   useEffect(() => {
     const timeout = setTimeout(() => {
-      messagesEndRef.current?.scrollIntoView({ 
+      messagesEndRef.current?.scrollIntoView({
         behavior: "smooth",
         block: "end"
       });
@@ -225,15 +225,70 @@ const ChatView = ({
                 className={`flex mb-4 sm:mb-6 ${msg.type === "user" ? "justify-end" : "justify-start"}`}
               >
                 <div
-                  className={`relative w-full sm:max-w-4xl px-4 sm:px-5 py-3 sm:py-4 rounded-2xl text-sm sm:text-base leading-relaxed ${
-                    msg.type === "user"
-                      ? "bg-gradient-to-br from-purple-500 to-indigo-600 hover:bg-[#A259FF]/90 text-white ml-4 sm:ml-12"
-                      : "bg-gray-800 text-white mr-4 sm:mr-12"
-                  } shadow-[0_-3px_6px_rgba(0,0,0,0.1),0_3px_6px_rgba(0,0,0,0.1),-3px_0_6px_rgba(0,0,0,0.1),3px_0_6px_rgba(0,0,0,0.1)]`}
+                  className={`relative ${msg.type === "user"
+                      ? "inline-block max-w-[80%] bg-gradient-to-br from-purple-500 to-indigo-600 hover:bg-[#A259FF]/90 text-white ml-4 sm:ml-12"
+                      : "w-full sm:max-w-4xl bg-gray-800 text-white mr-4 sm:mr-12"
+                    } px-4 sm:px-5 py-3 sm:py-4 rounded-2xl text-sm sm:text-base leading-relaxed shadow-[0_-3px_6px_rgba(0,0,0,0.1),0_3px_6px_rgba(0,0,0,0.1),-3px_0_6px_rgba(0,0,0,0.1),3px_0_6px_rgba(0,0,0,0.1)]`}
                 >
-                  <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    components={{
+                      a: ({ node, ...props }) => (
+                        <a
+                          {...props}
+                          className="text-[#2964AA] underline hover:opacity-80 transition"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        />
+                      ),
+                      table: ({ node, ...props }) => (
+                        <div className="overflow-x-auto">
+                          <table
+                            className="min-w-full border-separate border-spacing-y-1 rounded-lg overflow-hidden shadow-md text-xs md:text-sm"
+                            {...props}
+                          />
+                        </div>
+                      ),
+                      thead: ({ node, ...props }) => (
+                        <thead className="bg-blue-700 text-white border-b border-blue-400" {...props} />
+                      ),
+                      th: ({ node, ...props }) => (
+                        <th
+                          className="px-2 md:px-4 py-1 md:py-2 text-left border-b border-blue-400 text-xs md:text-sm"
+                          {...props}
+                        />
+                      ),
+                      tbody: ({ node, ...props }) => <tbody {...props} />,
+                      tr: ({ node, ...props }) => (
+                        <tr className="bg-gray-800 hover:bg-gray-700 border-b border-gray-700" {...props} />
+                      ),
+                      td: ({ node, ...props }) => (
+                        <td
+                          className="px-2 md:px-4 py-1 md:py-2 align-top border-b border-gray-700 text-xs md:text-sm"
+                          {...props}
+                        />
+                      ),
+                      ul: ({ node, ...props }) => (
+                        <ul className="list-disc list-inside space-y-1 pl-4" {...props} />
+                      ),
+                      ol: ({ node, ...props }) => (
+                        <ol className="list-decimal list-inside space-y-1 pl-4" {...props} />
+                      ),
+                      li: ({ node, ...props }) => (
+                        <li className="mb-1 leading-relaxed" {...props} />
+                      ),
+                      p: ({ node, ...props }) => (
+                        <p className="mb-2 leading-relaxed text-gray-300" {...props} />
+                      ),
+                      blockquote: ({ node, ...props }) => (
+                        <blockquote className="border-l-4 border-blue-600 pl-4 italic text-gray-400 my-4" {...props} />
+                      )
+                    }
+                    }
+                  >
                     {msg.content}
                   </ReactMarkdown>
+
                   {msg.type === "bot" && (
                     <>
                       <button
@@ -350,7 +405,7 @@ const ChatView = ({
           />
 
           <DialogFooter>
-            <Button 
+            <Button
               onClick={() => setIsModalOpen(false)}
               className="min-h-[44px] transition-colors"
             >

@@ -15,7 +15,7 @@ const ResponsiveLayout = ({ children }: ResponsiveLayoutProps) => {
     <div className="flex h-screen w-full bg-background text-foreground overflow-hidden">
       {/* Desktop Sidebar */}
       {!isMobile && <Sidebar />}
-      
+
       {/* Mobile Sidebar */}
       <MobileSidebar />
 
@@ -25,11 +25,13 @@ const ResponsiveLayout = ({ children }: ResponsiveLayoutProps) => {
         <header className="sticky top-0 z-20 border-b bg-gray-700/95 backdrop-blur-sm p-3 shadow-sm flex items-center justify-between min-h-[64px]">
           <div className="flex items-center gap-4">
             {/* Mobile hamburger space - handled by MobileSidebar */}
-            <div className={`${isMobile ? 'ml-16' : ''} transition-all duration-200`}>
-              <h1 className="text-xl sm:text-2xl font-semibold text-white truncate">
-                <span className="text-[#A259FF]">DataGpt</span>
-              </h1>
-            </div>
+            {isMobile && (
+              <div className="ml-16 transition-all duration-200">
+                <h1 className="text-xl sm:text-2xl font-semibold text-white truncate">
+                  <span className="text-[#A259FF]">DataGpt</span>
+                </h1>
+              </div>
+            )}
           </div>
           <div className="flex items-center gap-2 sm:gap-4">
             {/* Header content will be passed as children if needed */}

@@ -29,27 +29,11 @@ const MobileSidebar = ({ children }: MobileSidebarProps) => {
           <Menu className="h-5 w-5" />
         </Button>
       </SheetTrigger>
-      <SheetContent 
-        side="left" 
-        className="p-0 w-80 bg-gray-900 border-gray-700"
+      <SheetContent
+        side="left"
+        className="p-0 w-72 bg-gray-900 border-gray-700"
         aria-describedby="mobile-sidebar-description"
       >
-        <div id="mobile-sidebar-description" className="sr-only">
-          Navigation menu with workspaces and chat history
-        </div>
-        <div className="flex items-center justify-between p-4 border-b border-gray-700">
-          <h2 className="text-lg font-semibold text-white">Menu</h2>
-          <SheetClose asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-gray-400 hover:text-white"
-              aria-label="Close navigation menu"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </SheetClose>
-        </div>
         <div className="h-full overflow-hidden">
           <Sidebar />
         </div>
