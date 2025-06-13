@@ -116,7 +116,7 @@ const handleScrapeUrl = async () => {
               />
             </div>
             <div className="text-sm text-gray-500">
-              Enter a complete URL including the http:// or https:// prefix
+              Enter a complete URL
             </div>
           </div>
 
