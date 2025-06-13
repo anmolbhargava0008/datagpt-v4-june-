@@ -48,11 +48,11 @@ const ChatView = ({
   const [workspaceLoadingStates, setWorkspaceLoadingStates] = useState<Record<number, boolean>>({});
   const [expandedSources, setExpandedSources] = useState<Record<string, boolean>>({});
   
-  // Track the last message that had typewriter effect for each workspace
-  const [lastTypewriterMessageIds, setLastTypewriterMessageIds] = useState<Record<number, string>>({});
+  // Track typewriter effect for new messages only
+  const [typewriterMessageId, setTypewriterMessageId] = useState<string | null>(null);
   const [typewriterText, setTypewriterText] = useState<string>("");
   const [typewriterIndex, setTypewriterIndex] = useState<number>(0);
-  const [activeTypewriterMessageId, setActiveTypewriterMessageId] = useState<string | null>(null);
+  const [isAwaitingNewMessage, setIsAwaitingNewMessage] = useState<Record<number, boolean>>({});
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -70,39 +70,42 @@ const ChatView = ({
     .filter(msg => msg.type === "bot")
     .slice(-1)[0];
 
-  // Check if we should show typewriter effect for the latest bot message
-  const shouldShowTypewriter = latestBotMessage && 
-    lastTypewriterMessageIds[workspaceId] !== latestBotMessage.id;
-
-  // Typewriter effect for new bot messages only
+  // Only trigger typewriter for the message we're awaiting AND when loading just finished
   useEffect(() => {
-    if (shouldShowTypewriter && latestBotMessage) {
-      setActiveTypewriterMessageId(latestBotMessage.id);
+    if (isAwaitingNewMessage[workspaceId] && 
+        !loading && 
+        latestBotMessage && 
+        typewriterMessageId !== latestBotMessage.id) {
+      
+      setTypewriterMessageId(latestBotMessage.id);
       setTypewriterText("");
       setTypewriterIndex(0);
       
-      // Mark this message as having had typewriter effect
-      setLastTypewriterMessageIds(prev => ({
+      // Clear the awaiting flag since we're now processing the response
+      setIsAwaitingNewMessage(prev => ({
         ...prev,
-        [workspaceId]: latestBotMessage.id
+        [workspaceId]: false
       }));
     }
-  }, [latestBotMessage?.id, workspaceId]);
+  }, [loading, latestBotMessage?.id, isAwaitingNewMessage, workspaceId, typewriterMessageId]);
 
+  // Typewriter animation logic
   useEffect(() => {
-    if (activeTypewriterMessageId === latestBotMessage?.id && 
+    if (typewriterMessageId === latestBotMessage?.id && 
         typewriterIndex < latestBotMessage.content.length) {
       const timer = setTimeout(() => {
         setTypewriterText(prev => prev + latestBotMessage.content[typewriterIndex]);
         setTypewriterIndex(prev => prev + 1);
       }, 20);
       return () => clearTimeout(timer);
-    } else if (activeTypewriterMessageId === latestBotMessage?.id && 
+    } else if (typewriterMessageId === latestBotMessage?.id && 
                typewriterIndex >= latestBotMessage.content.length) {
-      // Typewriter effect completed
-      setActiveTypewriterMessageId(null);
+      // Typewriter effect completed, clear the ID
+      setTimeout(() => {
+        setTypewriterMessageId(null);
+      }, 100);
     }
-  }, [typewriterIndex, latestBotMessage?.content, activeTypewriterMessageId]);
+  }, [typewriterIndex, latestBotMessage?.content, typewriterMessageId]);
 
   // Clear workspace loading state when switching workspaces
   useEffect(() => {
@@ -113,6 +116,13 @@ const ChatView = ({
       }));
     }
   }, [loading, workspaceId, workspaceLoadingStates]);
+
+  // Clear typewriter state when switching workspaces
+  useEffect(() => {
+    setTypewriterMessageId(null);
+    setTypewriterText("");
+    setTypewriterIndex(0);
+  }, [workspaceId]);
 
   // Scroll to bottom on new messages with proper mobile handling
   useEffect(() => {
@@ -165,6 +175,12 @@ const ChatView = ({
       return;
     }
 
+    // Set the awaiting flag BEFORE sending the message
+    setIsAwaitingNewMessage(prev => ({
+      ...prev,
+      [workspaceId]: true
+    }));
+
     setWorkspaceLoadingStates(prev => ({
       ...prev,
       [workspaceId]: true
@@ -178,6 +194,11 @@ const ChatView = ({
       console.error(error);
       toast.error("Failed to send message");
       setQueries((prev) => ({ ...prev, [workspaceId]: currentQuery }));
+      // Clear awaiting flag on error
+      setIsAwaitingNewMessage(prev => ({
+        ...prev,
+        [workspaceId]: false
+      }));
     } finally {
       setWorkspaceLoadingStates(prev => ({
         ...prev,
@@ -331,7 +352,7 @@ const ChatView = ({
                     }
                     }
                   >
-                    {msg.type === "bot" && activeTypewriterMessageId === msg.id 
+                    {msg.type === "bot" && typewriterMessageId === msg.id 
                       ? typewriterText
                       : msg.content
                     }
