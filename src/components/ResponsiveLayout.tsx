@@ -12,10 +12,6 @@ const ResponsiveLayout = ({ children }: ResponsiveLayoutProps) => {
   const isMobile = useIsMobile();
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
-  const handleCloseMobileSidebar = () => {
-    setIsMobileSidebarOpen(false);
-  };
-
   return (
     <div className="flex h-screen w-full bg-background text-foreground overflow-hidden">
       {/* Desktop Sidebar */}
@@ -24,7 +20,7 @@ const ResponsiveLayout = ({ children }: ResponsiveLayoutProps) => {
       {/* Mobile Sidebar */}
       <MobileSidebar 
         isOpen={isMobileSidebarOpen} 
-        onClose={handleCloseMobileSidebar}
+        onOpenChange={setIsMobileSidebarOpen}
       />
 
       {/* Main Content */}

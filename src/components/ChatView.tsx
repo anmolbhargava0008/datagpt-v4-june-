@@ -47,9 +47,12 @@ const ChatView = ({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [workspaceLoadingStates, setWorkspaceLoadingStates] = useState<Record<number, boolean>>({});
   const [expandedSources, setExpandedSources] = useState<Record<string, boolean>>({});
-  const [typewriterMessageId, setTypewriterMessageId] = useState<string | null>(null);
+  
+  // Track the last message that had typewriter effect for each workspace
+  const [lastTypewriterMessageIds, setLastTypewriterMessageIds] = useState<Record<number, string>>({});
   const [typewriterText, setTypewriterText] = useState<string>("");
   const [typewriterIndex, setTypewriterIndex] = useState<number>(0);
+  const [activeTypewriterMessageId, setActiveTypewriterMessageId] = useState<string | null>(null);
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -62,29 +65,44 @@ const ChatView = ({
   const filteredMessages = chatMessages[workspaceId] || [];
   const isWorkspaceLoading = workspaceLoadingStates[workspaceId] || false;
 
-  // Get the latest bot message for typewriter effect
+  // Get the latest bot message
   const latestBotMessage = filteredMessages
     .filter(msg => msg.type === "bot")
     .slice(-1)[0];
 
-  // Typewriter effect for latest bot message
+  // Check if we should show typewriter effect for the latest bot message
+  const shouldShowTypewriter = latestBotMessage && 
+    lastTypewriterMessageIds[workspaceId] !== latestBotMessage.id;
+
+  // Typewriter effect for new bot messages only
   useEffect(() => {
-    if (latestBotMessage && latestBotMessage.id !== typewriterMessageId) {
-      setTypewriterMessageId(latestBotMessage.id);
+    if (shouldShowTypewriter && latestBotMessage) {
+      setActiveTypewriterMessageId(latestBotMessage.id);
       setTypewriterText("");
       setTypewriterIndex(0);
+      
+      // Mark this message as having had typewriter effect
+      setLastTypewriterMessageIds(prev => ({
+        ...prev,
+        [workspaceId]: latestBotMessage.id
+      }));
     }
-  }, [latestBotMessage?.id]);
+  }, [latestBotMessage?.id, workspaceId]);
 
   useEffect(() => {
-    if (typewriterMessageId === latestBotMessage?.id && typewriterIndex < latestBotMessage.content.length) {
+    if (activeTypewriterMessageId === latestBotMessage?.id && 
+        typewriterIndex < latestBotMessage.content.length) {
       const timer = setTimeout(() => {
         setTypewriterText(prev => prev + latestBotMessage.content[typewriterIndex]);
         setTypewriterIndex(prev => prev + 1);
       }, 20);
       return () => clearTimeout(timer);
+    } else if (activeTypewriterMessageId === latestBotMessage?.id && 
+               typewriterIndex >= latestBotMessage.content.length) {
+      // Typewriter effect completed
+      setActiveTypewriterMessageId(null);
     }
-  }, [typewriterIndex, latestBotMessage?.content, typewriterMessageId]);
+  }, [typewriterIndex, latestBotMessage?.content, activeTypewriterMessageId]);
 
   // Clear workspace loading state when switching workspaces
   useEffect(() => {
@@ -313,7 +331,7 @@ const ChatView = ({
                     }
                     }
                   >
-                    {msg.type === "bot" && msg.id === typewriterMessageId && typewriterIndex < msg.content.length 
+                    {msg.type === "bot" && activeTypewriterMessageId === msg.id 
                       ? typewriterText
                       : msg.content
                     }

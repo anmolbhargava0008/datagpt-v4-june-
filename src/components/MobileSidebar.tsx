@@ -9,10 +9,10 @@ import Sidebar from "./Sidebar";
 interface MobileSidebarProps {
   children?: React.ReactNode;
   isOpen?: boolean;
-  onClose?: () => void;
+  onOpenChange?: (open: boolean) => void;
 }
 
-const MobileSidebar = ({ children, isOpen, onClose }: MobileSidebarProps) => {
+const MobileSidebar = ({ children, isOpen, onOpenChange }: MobileSidebarProps) => {
   const isMobile = useIsMobile();
 
   if (!isMobile) {
@@ -20,7 +20,7 @@ const MobileSidebar = ({ children, isOpen, onClose }: MobileSidebarProps) => {
   }
 
   return (
-    <Sheet open={isOpen} onOpenChange={onClose}>
+    <Sheet open={isOpen} onOpenChange={onOpenChange}>
       <SheetTrigger asChild>
         <Button
           variant="ghost"
@@ -37,7 +37,7 @@ const MobileSidebar = ({ children, isOpen, onClose }: MobileSidebarProps) => {
         aria-describedby="mobile-sidebar-description"
       >
         <div className="h-full overflow-hidden">
-          <Sidebar onWorkspaceSelect={onClose} />
+          <Sidebar onWorkspaceSelect={() => onOpenChange?.(false)} />
         </div>
       </SheetContent>
     </Sheet>
