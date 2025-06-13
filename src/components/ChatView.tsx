@@ -47,6 +47,9 @@ const ChatView = ({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [workspaceLoadingStates, setWorkspaceLoadingStates] = useState<Record<number, boolean>>({});
   const [expandedSources, setExpandedSources] = useState<Record<string, boolean>>({});
+  const [typewriterMessageId, setTypewriterMessageId] = useState<string | null>(null);
+  const [typewriterText, setTypewriterText] = useState<string>("");
+  const [typewriterIndex, setTypewriterIndex] = useState<number>(0);
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -58,6 +61,30 @@ const ChatView = ({
 
   const filteredMessages = chatMessages[workspaceId] || [];
   const isWorkspaceLoading = workspaceLoadingStates[workspaceId] || false;
+
+  // Get the latest bot message for typewriter effect
+  const latestBotMessage = filteredMessages
+    .filter(msg => msg.type === "bot")
+    .slice(-1)[0];
+
+  // Typewriter effect for latest bot message
+  useEffect(() => {
+    if (latestBotMessage && latestBotMessage.id !== typewriterMessageId) {
+      setTypewriterMessageId(latestBotMessage.id);
+      setTypewriterText("");
+      setTypewriterIndex(0);
+    }
+  }, [latestBotMessage?.id]);
+
+  useEffect(() => {
+    if (typewriterMessageId === latestBotMessage?.id && typewriterIndex < latestBotMessage.content.length) {
+      const timer = setTimeout(() => {
+        setTypewriterText(prev => prev + latestBotMessage.content[typewriterIndex]);
+        setTypewriterIndex(prev => prev + 1);
+      }, 20);
+      return () => clearTimeout(timer);
+    }
+  }, [typewriterIndex, latestBotMessage?.content, typewriterMessageId]);
 
   // Clear workspace loading state when switching workspaces
   useEffect(() => {
@@ -215,7 +242,7 @@ const ChatView = ({
 
   return (
     <div className="flex flex-col h-full bg-gray-800 relative">
-      {/* Chat messages with proper mobile spacing */}
+      {/* Chat messages with proper mobile spacing - scrollable area */}
       <div className="flex-grow overflow-y-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
         <div className={`max-w-none ${isMobile ? '' : 'max-w-4xl mx-auto'} w-full`}>
           {hasChatHistory ? (
@@ -286,7 +313,10 @@ const ChatView = ({
                     }
                     }
                   >
-                    {msg.content}
+                    {msg.type === "bot" && msg.id === typewriterMessageId && typewriterIndex < msg.content.length 
+                      ? typewriterText
+                      : msg.content
+                    }
                   </ReactMarkdown>
 
                   {msg.type === "bot" && (
@@ -331,8 +361,8 @@ const ChatView = ({
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input area with mobile optimization */}
-      <div className="bg-gray-600 mb-2 mx-2 sm:mx-auto p-2 w-auto sm:w-[80%] max-w-4xl flex flex-col rounded-xl sticky bottom-2">
+      {/* Input area fixed at bottom - no longer scrolls with content */}
+      <div className="bg-gray-600 mb-2 mx-2 sm:mx-auto p-2 w-auto sm:w-[80%] max-w-4xl flex flex-col rounded-xl sticky bottom-2 z-10">
         <div className="relative">
           <textarea
             ref={inputRef}

@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import Sidebar from "./Sidebar";
 import MobileSidebar from "./MobileSidebar";
@@ -10,6 +10,11 @@ interface ResponsiveLayoutProps {
 
 const ResponsiveLayout = ({ children }: ResponsiveLayoutProps) => {
   const isMobile = useIsMobile();
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+
+  const handleCloseMobileSidebar = () => {
+    setIsMobileSidebarOpen(false);
+  };
 
   return (
     <div className="flex h-screen w-full bg-background text-foreground overflow-hidden">
@@ -17,11 +22,14 @@ const ResponsiveLayout = ({ children }: ResponsiveLayoutProps) => {
       {!isMobile && <Sidebar />}
 
       {/* Mobile Sidebar */}
-      <MobileSidebar />
+      <MobileSidebar 
+        isOpen={isMobileSidebarOpen} 
+        onClose={handleCloseMobileSidebar}
+      />
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Sticky Header */}
+        {/* Sticky Header - fixed at top */}
         <header className="sticky top-0 z-20 border-b bg-gray-700/95 backdrop-blur-sm p-3 shadow-sm flex items-center justify-between min-h-[64px]">
           <div className="flex items-center gap-4">
             {/* Mobile hamburger space - handled by MobileSidebar */}

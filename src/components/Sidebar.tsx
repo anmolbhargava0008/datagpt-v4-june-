@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useWorkspace } from "@/context/WorkspaceContext";
 import { WorkspaceWithDocuments } from "@/types/api";
@@ -34,7 +35,11 @@ import { useLocation } from "react-router-dom";
 import ConfirmDialog from "./DeleteModal";
 import * as Tooltip from '@radix-ui/react-tooltip';
 
-const Sidebar = () => {
+interface SidebarProps {
+  onWorkspaceSelect?: () => void;
+}
+
+const Sidebar = ({ onWorkspaceSelect }: SidebarProps) => {
   const location = useLocation();
   const { userRole, isAppValid } = useAuth();
   const {
@@ -73,11 +78,13 @@ const Sidebar = () => {
 
   console.log(currentSessionDocuments)
 
-  const filteredWorkspaces = searchQuery
-    ? workspaces.filter((ws) =>
-      ws.ws_name.toLowerCase().includes(searchQuery.toLowerCase())
-    )
-    : workspaces;
+  // Helper function to check if a workspace has chat history
+  const hasWorkspaceChatHistory = (
+    workspaceId: number | undefined
+  ): boolean => {
+    if (!workspaceId) return false;
+    return chatMessages[workspaceId]?.length > 0 || false;
+  };
 
   const checkFreeTierAccess = (): boolean => {
     if (!isAppValid) {
@@ -89,6 +96,10 @@ const Sidebar = () => {
 
   const handleWorkspaceClick = (workspace: WorkspaceWithDocuments) => {
     selectWorkspace(workspace);
+    // Close mobile sidebar when workspace is selected
+    if (onWorkspaceSelect) {
+      onWorkspaceSelect();
+    }
   };
 
   const handleEditClick = (
@@ -138,12 +149,26 @@ const Sidebar = () => {
     }
   };
 
-  // Helper function to check if a workspace has chat history
-  const hasWorkspaceChatHistory = (
-    workspaceId: number | undefined
-  ): boolean => {
-    if (!workspaceId) return false;
-    return chatMessages[workspaceId]?.length > 0 || false;
+  const handleConfirmDelete = async () => {
+    if (confirmDelete?.ws_id) {
+      await deleteWorkspace(confirmDelete.ws_id);
+      
+      // After deletion, switch to the most recent workspace if the deleted one was selected
+      if (selectedWorkspace?.ws_id === confirmDelete.ws_id) {
+        const remainingWorkspaces = workspaces.filter(ws => ws.ws_id !== confirmDelete.ws_id);
+        if (remainingWorkspaces.length > 0) {
+          // Sort by date and then by ID to get the most recent workspace
+          const mostRecentWorkspace = remainingWorkspaces
+            .sort((a, b) => {
+              const dateDiff = new Date(b.ws_date).getTime() - new Date(a.ws_date).getTime();
+              if (dateDiff !== 0) return dateDiff;
+              return (b.ws_id || 0) - (a.ws_id || 0);
+            })[0];
+          selectWorkspace(mostRecentWorkspace);
+        }
+      }
+    }
+    setConfirmDelete(null);
   };
 
   return (
@@ -187,160 +212,190 @@ const Sidebar = () => {
             </div>
 
             <div className="space-y-1 mt-2">
-              {filteredWorkspaces.map((workspace) => {
-                const wsId = workspace.ws_id || 0;
-                const hasHistory = hasWorkspaceChatHistory(wsId);
-                const isSelected = selectedWorkspace?.ws_id === wsId;
-                console.log(workspace)
-                // Determine if workspace has URL or PDF content based on chat history or current session
-                const workspaceHasPdf = isSelected
-                  ? hasPdfUploaded
-                  : workspace.documents?.length > 0;
-
-                return (
-                  <div
-                    key={wsId}
-                    onClick={() => handleWorkspaceClick(workspace)}
-                    className={`flex items-center justify-between p-1 rounded-md cursor-pointer group transition-colors duration-200 ${isSelected
-                      ? "bg-gray-700 border-l-4 border-[#A259FF]"
-                      : "hover:bg-gray-700 border-l-4 border-transparent"
-                      }`}
-                  >
-                    {/* Left Side: Workspace info */}
-                    <div className="flex items-start space-x-2">
-                      <FileText
-                        className={`h-4 w-4 mt-0.5 ${isSelected ? "text-[#A259FF]" : "text-gray-400"
-                          }`}
-                      />
-                      <div>
-                        <p className="flex text-sm font-medium text-gray-200">
-                          <p className="text-sm font-medium text-gray-200">
-                            {workspace.ws_name.length > 20
-                              ? `${workspace.ws_name.slice(0, 25)}...`
-                              : workspace.ws_name}
-                          </p>
-                        </p>
-                        <div className="flex items-center space-x-2 mt-0.5">
-                          {/* Buttons*/}
-                          <div className="flex items-center space-x-2 mt-0.5">
-                            <p className="text-xs text-gray-400">
-                              {workspace.fileCount} {workspace.fileCount === 1 ? 'file' : 'files'}
-                            </p>
-                            <Tooltip.Provider delayDuration={0}>
-                              <div className="flex gap-2">
-                                <Tooltip.Root>
-                                  <Tooltip.Trigger asChild>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      className={`h-4 w-6 p-0 ${isSelected ? "text-gray-400 hover:text-white hover:bg-gray-600" : "text-gray-600 cursor-not-allowed"}`}
-                                      onClick={(e) => {
-                                        if (isSelected) handleHistoryClick(workspace, e);
-                                        e.stopPropagation();
-                                      }}
-                                      disabled={!isSelected}
-                                    >
-                                      <History className="h-4 w-6" />
-                                    </Button>
-                                  </Tooltip.Trigger>
-                                  <Tooltip.Content
-                                    side="top"
-                                    className="rounded bg-black px-2 py-1 text-xs text-white"
-                                    sideOffset={5}
-                                  >
-                                    View History
-                                  </Tooltip.Content>
-                                </Tooltip.Root>
-
-                                <Tooltip.Root>
-                                  <Tooltip.Trigger asChild>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      className={`h-4 w-6 p-0 ${isSelected ? "text-gray-400 hover:text-white hover:bg-gray-600" : "text-gray-600 cursor-not-allowed"}`}
-                                      onClick={(e) => {
-                                        if (isSelected) handleUrlClick(e);
-                                        e.stopPropagation();
-                                      }}
-                                      disabled={!isSelected}
-                                    >
-                                      <Link className="h-4 w-6" />
-                                    </Button>
-                                  </Tooltip.Trigger>
-                                  <Tooltip.Content
-                                    side="top"
-                                    className="rounded bg-black px-2 py-1 text-xs text-white"
-                                    sideOffset={5}
-                                  >
-                                    Scrape Website
-                                  </Tooltip.Content>
-                                </Tooltip.Root>
-
-                                <Tooltip.Root>
-                                  <Tooltip.Trigger asChild>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      className={`h-4 w-6 p-0 ${isSelected ? "text-gray-400 hover:text-white hover:bg-gray-600" : "text-gray-600 cursor-not-allowed"}`}
-                                      onClick={(e) => {
-                                        if (isSelected) handleUploadClick(e);
-                                        e.stopPropagation();
-                                      }}
-                                      disabled={!isSelected}
-                                    >
-                                      <Upload className="h-4 w-6" />
-                                    </Button>
-                                  </Tooltip.Trigger>
-                                  <Tooltip.Content
-                                    side="top"
-                                    className="rounded bg-black px-2 py-1 text-xs text-white"
-                                    sideOffset={5}
-                                  >
-                                    Upload Document
-                                  </Tooltip.Content>
-                                </Tooltip.Root>
-                              </div>
-                            </Tooltip.Provider>
-                            {/* Dropdown */}
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-4 w-6 p-0 text-gray-400 hover:text-white hover:bg-gray-600"
-                                >
-                                  <MoreVertical className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent
-                                align="end"
-                                className="w-40 bg-gray-800 text-gray-200 border-gray-700"
-                              >
-                                <DropdownMenuItem
-                                  onClick={(e) => handleEditClick(workspace, e)}
-                                  className="focus:bg-gray-700 focus:text-white"
-                                >
-                                  <Edit className="mr-2 h-4 w-4" />
-                                  <span>Edit</span>
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator className="bg-gray-700" />
-                                <DropdownMenuItem
-                                  className="text-red-400 focus:text-red-300 focus:bg-gray-700"
-                                  onClick={(e) => handleDeleteClick(workspace, e)}
-                                >
-                                  <Trash2 className="mr-2 h-4 w-4" />
-                                  <span>Delete</span>
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div>
-                        </div>
-                      </div>
+              {Object.entries(
+                workspaces
+                  .filter((ws) =>
+                    ws.ws_name.toLowerCase().includes(searchQuery.toLowerCase())
+                  )
+                  .sort((a, b) => {
+                    // Sort by date descending, then by ws_id descending
+                    const dateDiff = new Date(b.ws_date).getTime() - new Date(a.ws_date).getTime();
+                    if (dateDiff !== 0) return dateDiff;
+                    return (b.ws_id || 0) - (a.ws_id || 0);
+                  })
+                  .reduce((acc: Record<string, WorkspaceWithDocuments[]>, ws) => {
+                    const dateKey = ws.ws_date;
+                    if (!acc[dateKey]) acc[dateKey] = [];
+                    acc[dateKey].push(ws);
+                    return acc;
+                  }, {})
+              )
+                .sort(([dateA], [dateB]) => new Date(dateB).getTime() - new Date(dateA).getTime())
+                .map(([date, workspaceList]) => (
+                  <div key={date} className="space-y-1 mb-2">
+                    <div className="text-sm font-medium pl-1 py-1">
+                      <span className="bg-gradient-to-br from-purple-500 to-indigo-600 bg-clip-text text-transparent shadow-[0_2px_0_rgba(168,85,247,0.3)] inline-block">
+                        {new Date(date).toLocaleDateString("en-GB")}
+                      </span>
                     </div>
-                  </div>
 
-                );
-              })}
+                    {workspaceList
+                      .sort((a, b) => (b.ws_id || 0) - (a.ws_id || 0))
+                      .map((workspace) => {
+                        const wsId = workspace.ws_id || 0;
+                        const hasHistory = hasWorkspaceChatHistory(wsId);
+                        const isSelected = selectedWorkspace?.ws_id === wsId;
+                        console.log(workspace)
+                        // Determine if workspace has URL or PDF content based on chat history or current session
+                        const workspaceHasPdf = isSelected
+                          ? hasPdfUploaded
+                          : workspace.documents?.length > 0;
+
+                        return (
+                          <div
+                            key={wsId}
+                            onClick={() => handleWorkspaceClick(workspace)}
+                            className={`flex items-center justify-between p-1 rounded-md cursor-pointer group transition-colors duration-200 ${isSelected
+                              ? "bg-gray-700 border-l-4 border-[#A259FF]"
+                              : "hover:bg-gray-700 border-l-4 border-transparent"
+                              }`}
+                          >
+                            {/* Left Side: Workspace info */}
+                            <div className="flex items-start space-x-2">
+                              <FileText
+                                className={`h-4 w-4 mt-0.5 ${isSelected ? "text-[#A259FF]" : "text-gray-400"
+                                  }`}
+                              />
+                              <div>
+                                <p className="flex text-sm font-medium text-gray-200">
+                                  <p className="text-sm font-medium text-gray-200">
+                                    {workspace.ws_name.length > 20
+                                      ? `${workspace.ws_name.slice(0, 25)}...`
+                                      : workspace.ws_name}
+                                  </p>
+                                </p>
+                                <div className="flex items-center space-x-2 mt-0.5">
+                                  {/* Buttons*/}
+                                  <div className="flex items-center space-x-2 mt-0.5">
+                                    <p className="text-xs text-gray-400">
+                                      {workspace.fileCount} {workspace.fileCount === 1 ? 'file' : 'files'}
+                                    </p>
+                                    <Tooltip.Provider delayDuration={0}>
+                                      <div className="flex gap-2">
+                                        <Tooltip.Root>
+                                          <Tooltip.Trigger asChild>
+                                            <Button
+                                              variant="ghost"
+                                              size="sm"
+                                              className={`h-4 w-6 p-0 ${isSelected ? "text-gray-400 hover:text-white hover:bg-gray-600" : "text-gray-600 cursor-not-allowed"}`}
+                                              onClick={(e) => {
+                                                if (isSelected) handleHistoryClick(workspace, e);
+                                                e.stopPropagation();
+                                              }}
+                                              disabled={!isSelected}
+                                            >
+                                              <History className="h-4 w-6" />
+                                            </Button>
+                                          </Tooltip.Trigger>
+                                          <Tooltip.Content
+                                            side="top"
+                                            className="rounded bg-black px-2 py-1 text-xs text-white"
+                                            sideOffset={5}
+                                          >
+                                            View History
+                                          </Tooltip.Content>
+                                        </Tooltip.Root>
+
+                                        <Tooltip.Root>
+                                          <Tooltip.Trigger asChild>
+                                            <Button
+                                              variant="ghost"
+                                              size="sm"
+                                              className={`h-4 w-6 p-0 ${isSelected ? "text-gray-400 hover:text-white hover:bg-gray-600" : "text-gray-600 cursor-not-allowed"}`}
+                                              onClick={(e) => {
+                                                if (isSelected) handleUrlClick(e);
+                                                e.stopPropagation();
+                                              }}
+                                              disabled={!isSelected}
+                                            >
+                                              <Link className="h-4 w-6" />
+                                            </Button>
+                                          </Tooltip.Trigger>
+                                          <Tooltip.Content
+                                            side="top"
+                                            className="rounded bg-black px-2 py-1 text-xs text-white"
+                                            sideOffset={5}
+                                          >
+                                            Scrape Website
+                                          </Tooltip.Content>
+                                        </Tooltip.Root>
+
+                                        <Tooltip.Root>
+                                          <Tooltip.Trigger asChild>
+                                            <Button
+                                              variant="ghost"
+                                              size="sm"
+                                              className={`h-4 w-6 p-0 ${isSelected ? "text-gray-400 hover:text-white hover:bg-gray-600" : "text-gray-600 cursor-not-allowed"}`}
+                                              onClick={(e) => {
+                                                if (isSelected) handleUploadClick(e);
+                                                e.stopPropagation();
+                                              }}
+                                              disabled={!isSelected}
+                                            >
+                                              <Upload className="h-4 w-6" />
+                                            </Button>
+                                          </Tooltip.Trigger>
+                                          <Tooltip.Content
+                                            side="top"
+                                            className="rounded bg-black px-2 py-1 text-xs text-white"
+                                            sideOffset={5}
+                                          >
+                                            Upload Document
+                                          </Tooltip.Content>
+                                        </Tooltip.Root>
+                                      </div>
+                                    </Tooltip.Provider>
+                                    {/* Dropdown */}
+                                    <DropdownMenu>
+                                      <DropdownMenuTrigger asChild>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="h-4 w-6 p-0 text-gray-400 hover:text-white hover:bg-gray-600"
+                                        >
+                                          <MoreVertical className="h-4 w-4" />
+                                        </Button>
+                                      </DropdownMenuTrigger>
+                                      <DropdownMenuContent
+                                        align="end"
+                                        className="w-40 bg-gray-800 text-gray-200 border-gray-700"
+                                      >
+                                        <DropdownMenuItem
+                                          onClick={(e) => handleEditClick(workspace, e)}
+                                          className="focus:bg-gray-700 focus:text-white"
+                                        >
+                                          <Edit className="mr-2 h-4 w-4" />
+                                          <span>Edit</span>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuSeparator className="bg-gray-700" />
+                                        <DropdownMenuItem
+                                          className="text-red-400 focus:text-red-300 focus:bg-gray-700"
+                                          onClick={(e) => handleDeleteClick(workspace, e)}
+                                        >
+                                          <Trash2 className="mr-2 h-4 w-4" />
+                                          <span>Delete</span>
+                                        </DropdownMenuItem>
+                                      </DropdownMenuContent>
+                                    </DropdownMenu>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                  </div>
+                ))}
             </div>
           </div>
 
@@ -402,12 +457,7 @@ const Sidebar = () => {
         <ConfirmDialog
           isOpen={!!confirmDelete}
           onClose={() => setConfirmDelete(null)}
-          onConfirm={async () => {
-            if (confirmDelete.ws_id) {
-              await deleteWorkspace(confirmDelete.ws_id);
-            }
-            setConfirmDelete(null);
-          }}
+          onConfirm={handleConfirmDelete}
           title={`Delete "${confirmDelete.ws_name}"?`}
           description="Are you sure you want to delete this workspace? This action cannot be undone."
           confirmText="Delete"
