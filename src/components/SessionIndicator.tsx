@@ -25,7 +25,7 @@ export default function SessionIndicator({
   const isUrl = (doc: string) => {
     return doc.startsWith('http://') || doc.startsWith('https://');
   };
-  
+
   // Helper function to get website domain for display
   const getWebsiteDomain = (url: string): string => {
     try {
@@ -41,7 +41,7 @@ export default function SessionIndicator({
   return (
     <div className="space-y-4">
       <h2 className="text-lg font-semibold text-white">Session Documents & URLs</h2>
-      
+
       <div className="space-y-2 max-h-60 overflow-y-auto">
         {currentSessionDocuments.length === 0 ? (
           <div className="text-gray-400 italic">No documents or URLs in current session</div>
@@ -54,14 +54,14 @@ export default function SessionIndicator({
               {isUrl(doc) ? (
                 <>
                   <Link className="h-4 w-4 text-[#A259FF] mr-2 flex-shrink-0" />
-                  <span className="text-[#A259FF] truncate text-sm" title={doc}>
+                  <span className="text-[#A259FF] text-xs break-all leading-snug" title={doc}>
                     {getWebsiteDomain(doc)}
                   </span>
                 </>
               ) : (
                 <>
                   <FileText className="h-4 w-4 text-[#A259FF] mr-2 flex-shrink-0" />
-                  <span className="text-[#A259FF] truncate text-sm" title={doc}>
+                  <span className="text-[#A259FF] text-xs break-all leading-snug" title={doc}>
                     {doc}
                   </span>
                 </>

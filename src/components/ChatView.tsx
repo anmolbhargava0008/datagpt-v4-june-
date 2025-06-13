@@ -47,16 +47,12 @@ const ChatView = ({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [workspaceLoadingStates, setWorkspaceLoadingStates] = useState<Record<number, boolean>>({});
   const [expandedSources, setExpandedSources] = useState<Record<string, boolean>>({});
-  
-  // Track typewriter effect for new messages only
   const [typewriterMessageId, setTypewriterMessageId] = useState<string | null>(null);
   const [typewriterText, setTypewriterText] = useState<string>("");
   const [typewriterIndex, setTypewriterIndex] = useState<number>(0);
   const [lastSeenMessageId, setLastSeenMessageId] = useState<Record<number, string | null>>({});
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
-
-  // Determine if chat history exists
   const hasChatHistory = chatMessages[workspaceId]?.length > 0;
   const isPdfSession = currentSessionType === "pdf";
   const isUrlSession = currentSessionType === "url";
@@ -64,24 +60,18 @@ const ChatView = ({
 
   const filteredMessages = chatMessages[workspaceId] || [];
   const isWorkspaceLoading = workspaceLoadingStates[workspaceId] || false;
-
-  // Get the latest bot message
   const latestBotMessage = filteredMessages
     .filter(msg => msg.type === "bot")
     .slice(-1)[0];
-
-  // Track when a truly new message arrives
   useEffect(() => {
-    if (latestBotMessage && 
-        lastSeenMessageId[workspaceId] !== latestBotMessage.id &&
-        lastSeenMessageId[workspaceId] !== undefined) { // Only trigger if we've seen a message before (not on initial load)
-      
+    if (latestBotMessage &&
+      lastSeenMessageId[workspaceId] !== latestBotMessage.id &&
+      lastSeenMessageId[workspaceId] !== undefined) { // Only trigger if we've seen a message before (not on initial load)
       setTypewriterMessageId(latestBotMessage.id);
       setTypewriterText("");
       setTypewriterIndex(0);
     }
-    
-    // Update the last seen message ID
+
     if (latestBotMessage) {
       setLastSeenMessageId(prev => ({
         ...prev,
@@ -90,7 +80,6 @@ const ChatView = ({
     }
   }, [latestBotMessage?.id, workspaceId]);
 
-  // Initialize last seen message ID when switching workspaces (without triggering typewriter)
   useEffect(() => {
     if (latestBotMessage && lastSeenMessageId[workspaceId] === undefined) {
       setLastSeenMessageId(prev => ({
@@ -100,25 +89,22 @@ const ChatView = ({
     }
   }, [workspaceId, latestBotMessage?.id, lastSeenMessageId]);
 
-  // Typewriter animation logic
   useEffect(() => {
-    if (typewriterMessageId === latestBotMessage?.id && 
-        typewriterIndex < latestBotMessage.content.length) {
+    if (typewriterMessageId === latestBotMessage?.id &&
+      typewriterIndex < latestBotMessage.content.length) {
       const timer = setTimeout(() => {
         setTypewriterText(prev => prev + latestBotMessage.content[typewriterIndex]);
         setTypewriterIndex(prev => prev + 1);
-      }, 20);
+      }, 2);
       return () => clearTimeout(timer);
-    } else if (typewriterMessageId === latestBotMessage?.id && 
-               typewriterIndex >= latestBotMessage.content.length) {
-      // Typewriter effect completed, clear the ID
+    } else if (typewriterMessageId === latestBotMessage?.id &&
+      typewriterIndex >= latestBotMessage.content.length) {
       setTimeout(() => {
         setTypewriterMessageId(null);
       }, 100);
     }
   }, [typewriterIndex, latestBotMessage?.content, typewriterMessageId]);
 
-  // Clear workspace loading state when switching workspaces
   useEffect(() => {
     if (!loading && workspaceLoadingStates[workspaceId]) {
       setWorkspaceLoadingStates(prev => ({
@@ -128,14 +114,12 @@ const ChatView = ({
     }
   }, [loading, workspaceId, workspaceLoadingStates]);
 
-  // Clear typewriter state when switching workspaces
   useEffect(() => {
     setTypewriterMessageId(null);
     setTypewriterText("");
     setTypewriterIndex(0);
   }, [workspaceId]);
 
-  // Scroll to bottom on new messages with proper mobile handling
   useEffect(() => {
     const timeout = setTimeout(() => {
       messagesEndRef.current?.scrollIntoView({
@@ -149,7 +133,7 @@ const ChatView = ({
   const autoResize = () => {
     if (inputRef.current) {
       inputRef.current.style.height = "auto";
-      const maxHeight = isMobile ? 120 : 192; // 120px on mobile, 192px on desktop
+      const maxHeight = isMobile ? 120 : 192;
       const newHeight = Math.min(inputRef.current.scrollHeight, maxHeight);
       inputRef.current.style.height = newHeight + "px";
     }
@@ -292,8 +276,8 @@ const ChatView = ({
               >
                 <div
                   className={`relative ${msg.type === "user"
-                      ? "inline-block max-w-[80%] bg-gradient-to-br from-purple-500 to-indigo-600 hover:bg-[#A259FF]/90 text-white ml-4 sm:ml-12"
-                      : "w-full sm:max-w-4xl bg-gray-800 text-white mr-4 sm:mr-12"
+                    ? "inline-block max-w-[80%] bg-gradient-to-br from-purple-500 to-indigo-600 hover:bg-[#A259FF]/90 text-white ml-4 sm:ml-12"
+                    : "w-full sm:max-w-4xl bg-gray-800 text-white mr-4 sm:mr-12"
                     } px-4 sm:px-5 py-3 sm:py-4 rounded-2xl text-sm sm:text-base leading-relaxed shadow-[0_-3px_6px_rgba(0,0,0,0.1),0_3px_6px_rgba(0,0,0,0.1),-3px_0_6px_rgba(0,0,0,0.1),3px_0_6px_rgba(0,0,0,0.1)]`}
                 >
                   <ReactMarkdown
@@ -352,7 +336,7 @@ const ChatView = ({
                     }
                     }
                   >
-                    {msg.type === "bot" && typewriterMessageId === msg.id 
+                    {msg.type === "bot" && typewriterMessageId === msg.id
                       ? typewriterText
                       : msg.content
                     }
@@ -399,8 +383,6 @@ const ChatView = ({
         </div>
         <div ref={messagesEndRef} />
       </div>
-
-      {/* Input area fixed at bottom - no longer scrolls with content */}
       <div className="bg-gray-600 mb-2 mx-2 sm:mx-auto p-2 w-auto sm:w-[80%] max-w-4xl flex flex-col rounded-xl sticky bottom-2 z-10">
         <div className="relative">
           <textarea

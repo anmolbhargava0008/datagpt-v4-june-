@@ -809,37 +809,37 @@ export const WorkspaceProvider = ({ children }: { children: ReactNode }) => {
         toast.error("Please select a workspace first");
         return false;
       }
-
+  
       setLoading(true);
-
+  
       if (!file.type.includes("pdf")) {
         toast.error("Only PDF files are supported");
         return false;
       }
-
+  
       // Get the session ID for this workspace
       let sessionId = selectedWorkspace.ws_id
         ? selectedWorkspace.session_id || sessionIds[selectedWorkspace.ws_id]
         : undefined;
-
+  
       if (!sessionId) {
         toast.error("No session found for this workspace");
         return false;
       }
-
+  
       // Upload document to LLM API using the session ID
       try {
         const result = await llmApi.uploadDocument(file, sessionId);
-
+  
         if (result.success) {
           toast.success(
             result.message || "Document uploaded successfully to AI"
           );
-
+  
           // Update session type
           const wsId = selectedWorkspace.ws_id!;
           const currentType = sessionTypes[wsId] || 'empty';
-          
+  
           // Update to PDF type if it was empty, or leave as is
           if (currentType === 'empty') {
             setSessionTypes((prev) => ({
@@ -848,7 +848,7 @@ export const WorkspaceProvider = ({ children }: { children: ReactNode }) => {
             }));
             setCurrentSessionType('pdf');
           }
-
+  
           // Update session documents
           setSessionDocuments((prev) => {
             const currentDocs = prev[wsId] || [];
@@ -861,7 +861,7 @@ export const WorkspaceProvider = ({ children }: { children: ReactNode }) => {
               [wsId]: newDocs,
             };
           });
-
+  
           // Update current session documents
           setCurrentSessionDocuments((prevDocs) => {
             if (!prevDocs.includes(file.name)) {
@@ -872,18 +872,19 @@ export const WorkspaceProvider = ({ children }: { children: ReactNode }) => {
         } else {
           console.error("Failed to upload to LLM API");
           toast.error("Failed to process document with AI");
+          return false;
         }
       } catch (llmErr) {
         console.error("Failed to upload to LLM API:", llmErr);
         toast.error("Failed to process document with AI");
+        return false;
       }
-
-      // Continue with the regular document upload
+  
       const response = await documentApi.upload(file, {
         ...selectedWorkspace,
         user_id: user?.user_id || 1,
       });
-
+  
       if (response.success) {
         await refreshWorkspaces();
         return true;
@@ -900,7 +901,7 @@ export const WorkspaceProvider = ({ children }: { children: ReactNode }) => {
     } finally {
       setLoading(false);
     }
-  };
+  };  
 
   const deleteDocument = async (docId: number) => {
     try {
@@ -982,7 +983,6 @@ export const WorkspaceProvider = ({ children }: { children: ReactNode }) => {
         }
       } catch (saveErr) {
         console.error("Failed to save initial prompt:", saveErr);
-        // Continue with LLM query even if prompt saving fails
       }
 
       // Step 2: Query the LLM API

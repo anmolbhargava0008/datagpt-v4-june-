@@ -29,8 +29,7 @@ const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
+  const handleFileSelect = (files: FileList | null) => {
     if (!files || files.length === 0) return;
 
     const newFiles: File[] = [];
@@ -43,23 +42,19 @@ const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
 
     if (newFiles.length > 0) {
       setSelectedFiles((prev) => {
-        // Create a new array with both previous and new files
         const combinedFiles = [...prev, ...newFiles];
-
-        // Remove any duplicates based on file name
         const uniqueFiles = combinedFiles.filter(
           (file, index, self) =>
             index === self.findIndex((f) => f.name === file.name)
         );
-
         return uniqueFiles;
       });
     }
+  };
 
-    // Clear the input to allow the same file to be uploaded again
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    handleFileSelect(e.target.files);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const handleRemoveFile = (indexToRemove: number) => {
@@ -127,15 +122,19 @@ const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
         )}
 
         <div>
-          <Button
-            type="button"
+          <div
+            onDrop={(e) => {
+              e.preventDefault();
+              handleFileSelect(e.dataTransfer.files);
+            }}
+            onDragOver={(e) => e.preventDefault()}
+            className="w-full border-2 border-dashed border-gray-300 p-6 text-center rounded-md hover:border-[#A259FF] transition-colors cursor-pointer"
             onClick={handleUploadClick}
-            className="bg-[#A259FF] hover:bg-[#A259FF]/90 text-white w-full"
-            disabled={uploading}
           >
-            <Upload className="h-4 w-4 mr-2" />
-            Select PDF Files
-          </Button>
+            <Upload className="mx-auto mb-2 text-[#A259FF]" />
+            <p className="text-sm text-gray-600">Drag & drop PDF files here or click to select</p>
+          </div>
+
           <input
             type="file"
             ref={fileInputRef}
