@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from "react";
 import { useWorkspace } from "@/context/WorkspaceContext";
 import ReactMarkdown from 'react-markdown';
@@ -51,7 +52,7 @@ const ChatView = ({
   const [typewriterMessageId, setTypewriterMessageId] = useState<string | null>(null);
   const [typewriterText, setTypewriterText] = useState<string>("");
   const [typewriterIndex, setTypewriterIndex] = useState<number>(0);
-  const [isAwaitingNewMessage, setIsAwaitingNewMessage] = useState<Record<number, boolean>>({});
+  const [lastSeenMessageId, setLastSeenMessageId] = useState<Record<number, string | null>>({});
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -69,27 +70,35 @@ const ChatView = ({
     .filter(msg => msg.type === "bot")
     .slice(-1)[0];
 
-  // Start typewriter effect immediately when a new message arrives (while still loading)
+  // Track when a truly new message arrives
   useEffect(() => {
-    if (isAwaitingNewMessage[workspaceId] && 
-        latestBotMessage && 
-        typewriterMessageId !== latestBotMessage.id) {
+    if (latestBotMessage && 
+        lastSeenMessageId[workspaceId] !== latestBotMessage.id &&
+        lastSeenMessageId[workspaceId] !== undefined) { // Only trigger if we've seen a message before (not on initial load)
       
       setTypewriterMessageId(latestBotMessage.id);
       setTypewriterText("");
       setTypewriterIndex(0);
     }
-  }, [latestBotMessage?.id, isAwaitingNewMessage, workspaceId, typewriterMessageId]);
-
-  // Clear awaiting flag when loading finishes
-  useEffect(() => {
-    if (!loading && isAwaitingNewMessage[workspaceId]) {
-      setIsAwaitingNewMessage(prev => ({
+    
+    // Update the last seen message ID
+    if (latestBotMessage) {
+      setLastSeenMessageId(prev => ({
         ...prev,
-        [workspaceId]: false
+        [workspaceId]: latestBotMessage.id
       }));
     }
-  }, [loading, workspaceId, isAwaitingNewMessage]);
+  }, [latestBotMessage?.id, workspaceId]);
+
+  // Initialize last seen message ID when switching workspaces (without triggering typewriter)
+  useEffect(() => {
+    if (latestBotMessage && lastSeenMessageId[workspaceId] === undefined) {
+      setLastSeenMessageId(prev => ({
+        ...prev,
+        [workspaceId]: latestBotMessage.id
+      }));
+    }
+  }, [workspaceId, latestBotMessage?.id, lastSeenMessageId]);
 
   // Typewriter animation logic
   useEffect(() => {
@@ -177,12 +186,6 @@ const ChatView = ({
       return;
     }
 
-    // Set the awaiting flag BEFORE sending the message
-    setIsAwaitingNewMessage(prev => ({
-      ...prev,
-      [workspaceId]: true
-    }));
-
     setWorkspaceLoadingStates(prev => ({
       ...prev,
       [workspaceId]: true
@@ -196,11 +199,6 @@ const ChatView = ({
       console.error(error);
       toast.error("Failed to send message");
       setQueries((prev) => ({ ...prev, [workspaceId]: currentQuery }));
-      // Clear awaiting flag on error
-      setIsAwaitingNewMessage(prev => ({
-        ...prev,
-        [workspaceId]: false
-      }));
     } finally {
       setWorkspaceLoadingStates(prev => ({
         ...prev,
@@ -356,9 +354,7 @@ const ChatView = ({
                   >
                     {msg.type === "bot" && typewriterMessageId === msg.id 
                       ? typewriterText
-                      : msg.type === "bot" && typewriterMessageId === msg.id 
-                        ? "" // Show nothing while typewriter is setting up
-                        : msg.content
+                      : msg.content
                     }
                   </ReactMarkdown>
 
