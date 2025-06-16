@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { useWorkspace } from "@/context/WorkspaceContext";
 import ReactMarkdown from 'react-markdown';
@@ -50,7 +49,7 @@ const ChatView = ({
   const [typewriterMessageId, setTypewriterMessageId] = useState<string | null>(null);
   const [typewriterText, setTypewriterText] = useState<string>("");
   const [typewriterIndex, setTypewriterIndex] = useState<number>(0);
-  const [lastSeenMessageId, setLastSeenMessageId] = useState<Record<number, string | null>>({});
+  const [messageSentWorkspaces, setMessageSentWorkspaces] = useState<Record<number, boolean>>({});
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const hasChatHistory = chatMessages[workspaceId]?.length > 0;
@@ -63,31 +62,23 @@ const ChatView = ({
   const latestBotMessage = filteredMessages
     .filter(msg => msg.type === "bot")
     .slice(-1)[0];
+
+  // Only trigger typewriter for new messages after sending a message
   useEffect(() => {
-    if (latestBotMessage &&
-      lastSeenMessageId[workspaceId] !== latestBotMessage.id &&
-      lastSeenMessageId[workspaceId] !== undefined) { // Only trigger if we've seen a message before (not on initial load)
+    if (latestBotMessage && 
+        messageSentWorkspaces[workspaceId] && 
+        !loading) {
       setTypewriterMessageId(latestBotMessage.id);
       setTypewriterText("");
       setTypewriterIndex(0);
-    }
-
-    if (latestBotMessage) {
-      setLastSeenMessageId(prev => ({
+      
+      // Clear the flag after triggering typewriter
+      setMessageSentWorkspaces(prev => ({
         ...prev,
-        [workspaceId]: latestBotMessage.id
+        [workspaceId]: false
       }));
     }
-  }, [latestBotMessage?.id, workspaceId]);
-
-  useEffect(() => {
-    if (latestBotMessage && lastSeenMessageId[workspaceId] === undefined) {
-      setLastSeenMessageId(prev => ({
-        ...prev,
-        [workspaceId]: latestBotMessage.id
-      }));
-    }
-  }, [workspaceId, latestBotMessage?.id, lastSeenMessageId]);
+  }, [latestBotMessage?.id, workspaceId, messageSentWorkspaces, loading]);
 
   useEffect(() => {
     if (typewriterMessageId === latestBotMessage?.id &&
@@ -118,6 +109,11 @@ const ChatView = ({
     setTypewriterMessageId(null);
     setTypewriterText("");
     setTypewriterIndex(0);
+    // Clear message sent flag when switching workspaces
+    setMessageSentWorkspaces(prev => ({
+      ...prev,
+      [workspaceId]: false
+    }));
   }, [workspaceId]);
 
   useEffect(() => {
@@ -170,6 +166,12 @@ const ChatView = ({
       return;
     }
 
+    // Set flag that a message was sent for this workspace
+    setMessageSentWorkspaces(prev => ({
+      ...prev,
+      [workspaceId]: true
+    }));
+
     setWorkspaceLoadingStates(prev => ({
       ...prev,
       [workspaceId]: true
@@ -183,6 +185,11 @@ const ChatView = ({
       console.error(error);
       toast.error("Failed to send message");
       setQueries((prev) => ({ ...prev, [workspaceId]: currentQuery }));
+      // Clear the flag if message failed
+      setMessageSentWorkspaces(prev => ({
+        ...prev,
+        [workspaceId]: false
+      }));
     } finally {
       setWorkspaceLoadingStates(prev => ({
         ...prev,
