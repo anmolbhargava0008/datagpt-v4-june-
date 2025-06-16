@@ -99,6 +99,9 @@ export const WorkspaceProvider = ({ children }: { children: ReactNode }) => {
   const [currentSessionDocuments, setCurrentSessionDocuments] = useState<string[]>([]);
   const [currentSessionType, setCurrentSessionType] = useState<SessionType>('empty');
 
+  // Track workspaces that just received a new message to prevent typewriter on history reload
+  const [workspacesWithNewMessage, setWorkspacesWithNewMessage] = useState<Record<number, string>>({});
+
   // Save session data to localStorage whenever they change
   useEffect(() => {
     localStorage.setItem(SESSION_IDS_STORAGE_KEY, JSON.stringify(sessionIds));
@@ -232,7 +235,7 @@ export const WorkspaceProvider = ({ children }: { children: ReactNode }) => {
     loadDocumentsForWorkspace();
   }, [selectedWorkspace?.ws_id, selectedWorkspace?.session_id]);
 
-  const loadLatestChatHistory = async (wsId: number, userId: number) => {
+  const loadLatestChatHistory = async (wsId: number, userId: number, skipTypewriterPrevention = false) => {
     try {
       // Get all prompts for this workspace and user
       const response = await promptHistoryApi.getAllSessionsForWorkspace(
@@ -311,11 +314,28 @@ export const WorkspaceProvider = ({ children }: { children: ReactNode }) => {
               formattedMessages.push(userMessage, botMessage);
             });
 
-          // Update chat messages for this workspace
-          setChatMessages((prev) => ({
-            ...prev,
-            [wsId]: formattedMessages,
-          }));
+          // Check if this workspace just received a new message
+          const lastBotMessage = formattedMessages.filter(msg => msg.type === "bot").slice(-1)[0];
+          const hasNewMessage = lastBotMessage && workspacesWithNewMessage[wsId] === lastBotMessage.content;
+
+          // If this is a history reload after a new message, don't update chat messages
+          // to prevent the typewriter effect from being disrupted
+          if (!hasNewMessage || skipTypewriterPrevention) {
+            // Update chat messages for this workspace
+            setChatMessages((prev) => ({
+              ...prev,
+              [wsId]: formattedMessages,
+            }));
+          }
+
+          // Clear the new message flag if we just processed it
+          if (hasNewMessage) {
+            setWorkspacesWithNewMessage((prev) => {
+              const updated = { ...prev };
+              delete updated[wsId];
+              return updated;
+            });
+          }
 
           // Extract document names and determine session type
           const documents = extractDocumentNamesFromPrompts(chatPrompts);
@@ -996,6 +1016,12 @@ export const WorkspaceProvider = ({ children }: { children: ReactNode }) => {
         sources: response.sources,
       };
   
+      // Mark this workspace as having a new message to prevent typewriter disruption
+      setWorkspacesWithNewMessage((prev) => ({
+        ...prev,
+        [workspaceId]: response.answer
+      }));
+  
       // Add bot message to the ORIGINAL workspace (not the currently selected one)
       setChatMessages((prev) => {
         const workspaceMessages = prev[workspaceId] || [];
@@ -1025,6 +1051,12 @@ export const WorkspaceProvider = ({ children }: { children: ReactNode }) => {
 
           await promptHistoryApi.updatePrompt(updatePromptData);
           console.log(`Updated prompt ${savedPromptId} with response`);
+
+          // Step 4: Reload chat history after a short delay to ensure it's updated in the backend
+          // but skip updating the messages to prevent typewriter disruption
+          setTimeout(() => {
+            loadLatestChatHistory(workspaceId, user.user_id, false);
+          }, 1000);
         } catch (updateErr) {
           console.error("Failed to update prompt with response:", updateErr);
         }
