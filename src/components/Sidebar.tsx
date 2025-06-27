@@ -22,12 +22,14 @@ import {
   Upload,
   History,
   Link,
+  HelpCircle,
 } from "lucide-react";
 import WorkspaceDialog from "./WorkspaceDialog";
 import UploadModal from "./UploadModal";
 import UrlModal from "./UrlModal";
 import ChatHistoryDialog from "./ChatHistoryDialog";
 import FreeTierModal from "./FreeTierModal";
+import ProductTour from "./ProductTour";
 import logoWhite from "./../../public/icons/logo-white.png";
 import SidebarNav from "./SidebarNav";
 import { useAuth } from "@/context/AuthContext";
@@ -64,6 +66,7 @@ const Sidebar = ({ onWorkspaceSelect }: SidebarProps) => {
   const [isFreeTierModalOpen, setIsFreeTierModalOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] =
     useState<WorkspaceWithDocuments | null>(null);
+  const [runTour, setRunTour] = useState(false);
 
   // Show workspace content on workspace routes (both /workspace and /workspace/:id)
   const showWorkspaceContent = location.pathname.startsWith("/workspace");
@@ -171,6 +174,14 @@ const Sidebar = ({ onWorkspaceSelect }: SidebarProps) => {
     setConfirmDelete(null);
   };
 
+  const handleStartTour = () => {
+    setRunTour(true);
+  };
+
+  const handleTourEnd = () => {
+    setRunTour(false);
+  };
+
   return (
     <div className="h-screen flex flex-col bg-gray-900 border-r border-gray-700 w-72 overflow-hidden">
       <div className="flex justify-center">
@@ -189,6 +200,7 @@ const Sidebar = ({ onWorkspaceSelect }: SidebarProps) => {
             <Button
               onClick={handleCreateWorkspaceClick}
               className="w-full bg-[#A259FF] hover:bg-[#A259FF]/90 text-white rounded-md h-9 shadow-sm flex items-center justify-center"
+              data-tour="create-workspace"
             >
               <Plus className="h-4 w-4 mr-2" /> New Workspace
             </Button>
@@ -293,6 +305,7 @@ const Sidebar = ({ onWorkspaceSelect }: SidebarProps) => {
                                                 e.stopPropagation();
                                               }}
                                               disabled={!isSelected}
+                                              data-tour="session-info"
                                             >
                                               <History className="h-4 w-6" />
                                             </Button>
@@ -317,6 +330,7 @@ const Sidebar = ({ onWorkspaceSelect }: SidebarProps) => {
                                                 e.stopPropagation();
                                               }}
                                               disabled={!isSelected}
+                                              data-tour="scrape-website"
                                             >
                                               <Link className="h-4 w-6" />
                                             </Button>
@@ -341,6 +355,7 @@ const Sidebar = ({ onWorkspaceSelect }: SidebarProps) => {
                                                 e.stopPropagation();
                                               }}
                                               disabled={!isSelected}
+                                              data-tour="upload-document"
                                             >
                                               <Upload className="h-4 w-6" />
                                             </Button>
@@ -362,6 +377,7 @@ const Sidebar = ({ onWorkspaceSelect }: SidebarProps) => {
                                           variant="ghost"
                                           size="sm"
                                           className="h-4 w-6 p-0 text-gray-400 hover:text-white hover:bg-gray-600"
+                                          data-tour="edit-workspace"
                                         >
                                           <MoreVertical className="h-4 w-4" />
                                         </Button>
@@ -412,6 +428,18 @@ const Sidebar = ({ onWorkspaceSelect }: SidebarProps) => {
                   0
                 )}
               </span>
+            </div>
+            
+            {/* Take a Tour Button */}
+            <div className="mt-3 pt-3 border-t border-gray-700">
+              <Button
+                onClick={handleStartTour}
+                variant="outline"
+                className="w-full bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-white h-8 text-sm"
+              >
+                <HelpCircle className="h-4 w-4 mr-2" />
+                Take a Tour
+              </Button>
             </div>
           </div>
         </>
@@ -464,6 +492,9 @@ const Sidebar = ({ onWorkspaceSelect }: SidebarProps) => {
           cancelText="Cancel"
         />
       )}
+
+      {/* Product Tour */}
+      <ProductTour runTour={runTour} onTourEnd={handleTourEnd} />
     </div>
   );
 };
