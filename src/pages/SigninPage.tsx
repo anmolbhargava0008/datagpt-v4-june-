@@ -52,15 +52,20 @@ const SigninPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-      <div className="w-full max-w-md space-y-8">
+    <div className="font-poppins min-h-screen flex items-center justify-center bg-gray-50 p-6 sm:p-10">
+      <div className="w-full max-w-xl space-y-8">
         <div className="text-center">
           <img src={logo} alt="logo" className="mx-auto w-80 h-auto" />
         </div>
         <div className="bg-white p-8 rounded-lg shadow-md">
-          <p className="text-center mb-4 text-gray-600">
-            Please Sign in to continue
-          </p>
+          <div className="text-center mb-4">
+            <h1 className="text-2xl font-semibold text-gray-700">
+              Sign in to continue
+            </h1>
+            <p className="text-gray-600 mt-2 text-sm">
+              Please enter your email and password
+            </p>
+          </div>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <FormField
@@ -68,11 +73,12 @@ const SigninPage = () => {
                 name="user_email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-center mb-4 text-gray-600">Email</FormLabel>
+                    <FormLabel className="text-gray-500">Email</FormLabel>
                     <FormControl>
                       <Input
                         placeholder="email@example.com"
                         type="email"
+                        className="border bg-white text-black border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                         {...field}
                       />
                     </FormControl>
@@ -86,9 +92,11 @@ const SigninPage = () => {
                 name="user_pwd"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-center mb-4 text-gray-600">Password</FormLabel>
+                    <FormLabel className="text-gray-500">Password</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="******" {...field} />
+                      <Input
+                        className="border bg-white text-black border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                        type="password" placeholder="******" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

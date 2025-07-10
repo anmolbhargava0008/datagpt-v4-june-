@@ -1,6 +1,6 @@
 
+import { API_BASE_URL } from "@/constants/api";
 import { SigninRequest, SignupRequest, AuthResponse, User, UserForManagement, ChatHistoryItem } from "@/types/auth";
-const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 const handleResponse = async <T>(response: Response): Promise<T> => {
   if (!response.ok) {

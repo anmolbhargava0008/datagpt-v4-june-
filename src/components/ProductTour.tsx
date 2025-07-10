@@ -58,7 +58,20 @@ const ProductTour = ({ runTour, onTourEnd }: ProductTourProps) => {
         <div className="p-2">
           <h3 className="text-lg font-semibold text-white mb-2">Ask a Question</h3>
           <p className="text-gray-300">
-            Type your questions here and get AI-powered answers based on your uploaded documents.
+            Type your questions here and get AI-powered answers based on your documents and/or websites.
+          </p>
+        </div>
+      ),
+      placement: 'top',
+      disableBeacon: true,
+    },
+    {
+      target: '[data-tour="session-info"]',
+      content: (
+        <div className="p-2">
+          <h3 className="text-lg font-semibold text-white mb-2">View History</h3>
+          <p className="text-gray-300">
+            See your current session documents and/or websites.
           </p>
         </div>
       ),
@@ -79,7 +92,7 @@ const ProductTour = ({ runTour, onTourEnd }: ProductTourProps) => {
       disableBeacon: true,
     },
     {
-      target: '[data-tour="session-info"]',
+      target: '[data-tour="history-info"]',
       content: (
         <div className="p-2">
           <h3 className="text-lg font-semibold text-white mb-2">View History</h3>

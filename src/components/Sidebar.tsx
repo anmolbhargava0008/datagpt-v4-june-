@@ -305,7 +305,7 @@ const Sidebar = ({ onWorkspaceSelect }: SidebarProps) => {
                                                 e.stopPropagation();
                                               }}
                                               disabled={!isSelected}
-                                              data-tour="session-info"
+                                              data-tour="history-info"
                                             >
                                               <History className="h-4 w-6" />
                                             </Button>
