@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+import { API_BASE_URL } from "@/constants/api";
 
 interface UserSettingsModalProps {
   isOpen: boolean;
@@ -51,7 +51,7 @@ const UserSettingsModal = ({ isOpen, onClose }: UserSettingsModalProps) => {
     try {
       setLoading(true);
       
-      const response = await fetch(`/api/v1/user`, {
+      const response = await fetch(`${API_BASE_URL}/api/v1/user`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

@@ -1,5 +1,5 @@
 
-import { API_BASE_URL } from "@/constants/api";
+import { API_BASE_URL} from "@/constants/api";
 import { Workspace, Document, ApiResponse, ChatPrompt } from "@/types/api";
 
 const DEFAULT_USER_ID = 1;

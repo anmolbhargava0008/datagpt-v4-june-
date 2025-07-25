@@ -71,7 +71,7 @@ const SignupPage = () => {
               Create an account
             </h1>
             <p className="text-gray-600 mt-2 text-sm">
-              Enter your details to get started with DataGpt
+              Enter your details to get started with Edelweiss DataGpt
             </p>
           </div>
 

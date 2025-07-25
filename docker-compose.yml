@@ -1,21 +1,21 @@
 version: "3.9"
 
 services:
-  si-datagpt-ui:
+  edelweiss-datagpt-ui:
     build:
       context: .
       dockerfile: Dockerfile
-    image: si-datagpt-ui:latest
-    container_name: si-datagpt-ui
+    image: edelweiss-datagpt-ui:latest
+    container_name: edelweiss-datagpt-ui
     ports:
-      - "9797:9797"
+      - "9595:9595"
     restart: unless-stopped
     depends_on:
       - backend
 
   backend:
-    image: si-datagpt-ui:latest
-    container_name: si-datagpt-ui
+    image: edelweiss-datagpt-ui:latest
+    container_name: edelweiss-datagpt-ui
     ports:
-      - "9797:9797"
+      - "9595:9595"
     restart: unless-stopped

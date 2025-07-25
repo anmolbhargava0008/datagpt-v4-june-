@@ -659,7 +659,8 @@ export const WorkspaceProvider = ({ children }: { children: ReactNode }) => {
         user_id: user.user_id,
         is_active: true,
         session_id: sessionId,
-      };
+        ws_date: new Date().toISOString().split("T")[0]
+      };      
 
       const response = await workspaceApi.create(newWorkspace);
 
@@ -728,6 +729,7 @@ export const WorkspaceProvider = ({ children }: { children: ReactNode }) => {
       const response = await workspaceApi.update({
         ...workspace,
         user_id: user?.user_id || 1,
+        ws_date: new Date().toISOString().split("T")[0]
       });
 
       if (response.success) {

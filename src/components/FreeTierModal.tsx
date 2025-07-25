@@ -21,7 +21,7 @@ const FreeTierModal = ({ isOpen, onClose }: FreeTierModalProps) => {
           <DialogTitle>Free Tier Expired</DialogTitle>
         </DialogHeader>
         <div className="py-4">
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-white">
             You have consumed the free tier of Prototype. Please connect with the Product team to enable the features.
           </p>
         </div>
