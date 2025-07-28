@@ -338,7 +338,11 @@ export const WorkspaceProvider = ({ children }: { children: ReactNode }) => {
           }
 
           // Extract document names and determine session type
-          const documents = extractDocumentNamesFromPrompts(chatPrompts);
+          const extractedDocuments = extractDocumentNamesFromPrompts(chatPrompts);
+          
+          // Use existing session documents if available, otherwise use extracted ones
+          const existingDocs = sessionDocuments[wsId] || [];
+          const documents = existingDocs.length > 0 ? existingDocs : extractedDocuments;
           
           // Determine session type based on documents
           const hasPdfs = documents.some(doc => doc.endsWith('.pdf'));
@@ -353,23 +357,31 @@ export const WorkspaceProvider = ({ children }: { children: ReactNode }) => {
             sessionType = 'url';
           }
           
-          // Update session type
-          setSessionTypes((prev) => ({
-            ...prev,
-            [wsId]: sessionType
-          }));
-          
-          if (wsId === selectedWorkspace?.ws_id) {
-            setCurrentSessionType(sessionType);
+          // Update session type only if it's not already set
+          const existingType = sessionTypes[wsId];
+          if (!existingType || existingType === 'empty') {
+            setSessionTypes((prev) => ({
+              ...prev,
+              [wsId]: sessionType
+            }));
+            
+            if (wsId === selectedWorkspace?.ws_id) {
+              setCurrentSessionType(sessionType);
+            }
           }
           
-          // Update session documents
-          setSessionDocuments((prev) => ({
-            ...prev,
-            [wsId]: documents,
-          }));
-          
-          setCurrentSessionDocuments(documents);
+          // Update session documents only if we don't already have them stored
+          if (existingDocs.length === 0) {
+            setSessionDocuments((prev) => ({
+              ...prev,
+              [wsId]: extractedDocuments,
+            }));
+            
+            setCurrentSessionDocuments(extractedDocuments);
+          } else {
+            // Keep existing documents
+            setCurrentSessionDocuments(existingDocs);
+          }
 
           console.log(
             `Loaded ${formattedMessages.length} messages for workspace ${wsId} with session type ${sessionType}`
