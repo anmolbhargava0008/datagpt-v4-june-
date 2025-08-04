@@ -22,7 +22,7 @@ const FreeTierModal = ({ isOpen, onClose }: FreeTierModalProps) => {
         </DialogHeader>
         <div className="py-4">
           <p className="text-sm text-muted-foreground">
-            Your subscription has expired. Please renew to access this feature.
+            Your Free Tier has expired. Please contact the admin team for continued access.
           </p>
         </div>
         <div className="flex justify-end">
