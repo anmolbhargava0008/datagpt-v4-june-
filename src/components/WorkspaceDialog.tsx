@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { useWorkspace } from '@/context/WorkspaceContext';
 import { WorkspaceWithDocuments } from '@/types/api';
 import { useAuth } from '@/context/AuthContext';
+import { toast } from 'sonner';
 
 interface WorkspaceDialogProps {
   isOpen: boolean;
@@ -15,7 +16,7 @@ interface WorkspaceDialogProps {
 }
 
 const WorkspaceDialog = ({ isOpen, onClose, workspace }: WorkspaceDialogProps) => {
-  const { user } = useAuth();
+  const { user, isAppValid } = useAuth();
   const { createWorkspace, updateWorkspace } = useWorkspace();
   const [workspaceName, setWorkspaceName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -34,6 +35,12 @@ const WorkspaceDialog = ({ isOpen, onClose, workspace }: WorkspaceDialogProps) =
     e.preventDefault();
     
     if (!workspaceName.trim()) {
+      return;
+    }
+
+    // Check subscription validity for creating new workspaces
+    if (!isEditing && !isAppValid) {
+      toast.error("Your subscription has expired. Please renew to create new workspaces.");
       return;
     }
     

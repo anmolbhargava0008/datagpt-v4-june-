@@ -34,22 +34,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if user data exists in localStorage
+    // Check if user data exists in localStorage (only for user and role)
     const storedUser = localStorage.getItem("user");
     const storedRole = localStorage.getItem("userRole");
-    const storedExpiryDate = localStorage.getItem("expiryDate");
-    const storedIsAppValid = localStorage.getItem("isAppValid");
 
     if (storedUser) {
       try {
         setUser(JSON.parse(storedUser));
         if (storedRole) setUserRole(parseInt(storedRole, 10));
-        if (storedExpiryDate) setExpiryDate(storedExpiryDate);
-        if (storedIsAppValid) setIsAppValid(storedIsAppValid === "true");
+        
+        // Note: isAppValid and expiryDate are NOT restored from localStorage
+        // They will be reset to defaults and must be refreshed via API call
+        // This prevents browser console manipulation
       } catch (error) {
         console.error("Failed to parse user data:", error);
         localStorage.removeItem("user");
         localStorage.removeItem("userRole");
+        // Clean up any legacy subscription data from localStorage
         localStorage.removeItem("expiryDate");
         localStorage.removeItem("isAppValid");
       }
@@ -73,20 +74,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         setUser(userData);
         setUserRole(roleId);
+        // Securely store subscription data in context only (not localStorage)
         setExpiryDate(response.expiry_date || null);
         setIsAppValid(response.is_app_valid || false);
-        // setIsAppValid(true);
 
-        // Store data in localStorage
+        // Store only user data and role in localStorage
+        // Subscription data (isAppValid, expiryDate) is kept in context only
         localStorage.setItem("user", JSON.stringify(userData));
         localStorage.setItem("userRole", roleId.toString());
-        if (response.expiry_date)
-          localStorage.setItem("expiryDate", response.expiry_date);
-        localStorage.setItem(
-          "isAppValid",
-          // (true).toString()
-          (response.is_app_valid || false).toString()
-        );
+        
+        // Clean up any legacy subscription data from localStorage
+        localStorage.removeItem("expiryDate");
+        localStorage.removeItem("isAppValid");
 
         toast.success("Signed in successfully");
 
@@ -133,9 +132,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     setUserRole(2); // Reset to GUEST
     setExpiryDate(null);
-    setIsAppValid(true);
+    setIsAppValid(true); // Reset to default
     localStorage.removeItem("user");
     localStorage.removeItem("userRole");
+    // Clean up any legacy subscription data from localStorage
     localStorage.removeItem("expiryDate");
     localStorage.removeItem("isAppValid");
     toast.success("Logged out successfully");

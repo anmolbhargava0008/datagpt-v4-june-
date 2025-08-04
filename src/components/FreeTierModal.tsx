@@ -18,11 +18,11 @@ const FreeTierModal = ({ isOpen, onClose }: FreeTierModalProps) => {
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Free Tier Expired</DialogTitle>
+          <DialogTitle>Subscription Expired</DialogTitle>
         </DialogHeader>
         <div className="py-4">
-          <p className="text-sm text-white">
-            You have consumed the free tier of Prototype. Please connect with the Product team to enable the features.
+          <p className="text-sm text-muted-foreground">
+            Your subscription has expired. Please renew to access this feature.
           </p>
         </div>
         <div className="flex justify-end">
