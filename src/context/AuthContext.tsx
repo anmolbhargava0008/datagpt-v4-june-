@@ -21,6 +21,7 @@ interface AuthContextType {
   signup: (userData: SignupRequest) => Promise<boolean>;
   logout: () => void;
   updateUserData: (updatedUser: User) => void;
+  checkFeatureAccess: () => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -31,6 +32,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [userRole, setUserRole] = useState<number>(2); // Default to GUEST
   const [expiryDate, setExpiryDate] = useState<string | null>(null);
   const [isAppValid, setIsAppValid] = useState<boolean>(true);
+  const [subscriptionHash, setSubscriptionHash] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -50,9 +52,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.error("Failed to parse user data:", error);
         localStorage.removeItem("user");
         localStorage.removeItem("userRole");
-        // Clean up any legacy subscription data from localStorage
-        localStorage.removeItem("expiryDate");
-        localStorage.removeItem("isAppValid");
       }
     }
 
@@ -77,15 +76,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Securely store subscription data in context only (not localStorage)
         setExpiryDate(response.expiry_date || null);
         setIsAppValid(response.is_app_valid || false);
+        
+        // Create a hash for validation (prevents simple console manipulation)
+        const subscriptionData = `${userData.user_id}_${response.is_app_valid}_${response.expiry_date}`;
+        const hash = btoa(subscriptionData); // Simple encoding for basic protection
+        setSubscriptionHash(hash);
 
         // Store only user data and role in localStorage
         // Subscription data (isAppValid, expiryDate) is kept in context only
         localStorage.setItem("user", JSON.stringify(userData));
         localStorage.setItem("userRole", roleId.toString());
-        
-        // Clean up any legacy subscription data from localStorage
-        localStorage.removeItem("expiryDate");
-        localStorage.removeItem("isAppValid");
 
         toast.success("Signed in successfully");
 
@@ -133,13 +133,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUserRole(2); // Reset to GUEST
     setExpiryDate(null);
     setIsAppValid(true); // Reset to default
+    setSubscriptionHash(null);
     localStorage.removeItem("user");
     localStorage.removeItem("userRole");
-    // Clean up any legacy subscription data from localStorage
-    localStorage.removeItem("expiryDate");
-    localStorage.removeItem("isAppValid");
     toast.success("Logged out successfully");
     navigate("/signin");
+  };
+
+  // Secure function to check feature access with additional validation
+  const checkFeatureAccess = (): boolean => {
+    if (!user || !subscriptionHash) {
+      return false;
+    }
+    
+    // Validate the subscription hash to ensure it hasn't been tampered with
+    const expectedData = `${user.user_id}_${isAppValid}_${expiryDate}`;
+    const expectedHash = btoa(expectedData);
+    
+    if (subscriptionHash !== expectedHash) {
+      // Hash mismatch indicates potential tampering
+      console.warn("Subscription validation failed");
+      return false;
+    }
+    
+    return isAppValid;
   };
 
   const updateUserData = (updatedUser: User) => {
@@ -160,6 +177,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signup,
         logout,
         updateUserData,
+        checkFeatureAccess,
       }}
     >
       {children}

@@ -16,7 +16,7 @@ interface WorkspaceDialogProps {
 }
 
 const WorkspaceDialog = ({ isOpen, onClose, workspace }: WorkspaceDialogProps) => {
-  const { user, isAppValid } = useAuth();
+  const { user, checkFeatureAccess } = useAuth();
   const { createWorkspace, updateWorkspace } = useWorkspace();
   const [workspaceName, setWorkspaceName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -39,7 +39,7 @@ const WorkspaceDialog = ({ isOpen, onClose, workspace }: WorkspaceDialogProps) =
     }
 
     // Check subscription validity for creating new workspaces
-    if (!isEditing && !isAppValid) {
+    if (!isEditing && !checkFeatureAccess()) {
       toast.error("Your subscription has expired. Please renew to create new workspaces.");
       return;
     }
