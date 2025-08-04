@@ -6,7 +6,11 @@ import React, {
   ReactNode,
 } from "react";
 import { useNavigate } from "react-router-dom";
-import { User, SigninRequest, SignupRequest, AuthResponse } from "@/types/auth";
+import {
+  User,
+  SigninRequest,
+  SignupRequest,
+} from "@/types/auth";
 import { toast } from "sonner";
 import { authApi } from "@/services/authApi";
 
@@ -29,14 +33,14 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [userRole, setUserRole] = useState<number>(2); // Default to GUEST
+  const [userRole, setUserRole] = useState<number>(2); // GUEST by default
   const [expiryDate, setExpiryDate] = useState<string | null>(null);
-  const [isAppValid, setIsAppValid] = useState<boolean>(true);
+  const [isAppValid, setIsAppValid] = useState<boolean>(false); // false by default
   const [subscriptionHash, setSubscriptionHash] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if user data exists in localStorage (only for user and role)
+    // Load user and role for UI continuity only
     const storedUser = localStorage.getItem("user");
     const storedRole = localStorage.getItem("userRole");
 
@@ -44,10 +48,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         setUser(JSON.parse(storedUser));
         if (storedRole) setUserRole(parseInt(storedRole, 10));
-        
-        // Note: isAppValid and expiryDate are NOT restored from localStorage
-        // They will be reset to defaults and must be refreshed via API call
-        // This prevents browser console manipulation
       } catch (error) {
         console.error("Failed to parse user data:", error);
         localStorage.removeItem("user");
@@ -62,28 +62,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const response = await authApi.signin(credentials);
 
-      if (response.success && response.data && response.data.length > 0) {
+      if (response.success && response.data?.length > 0) {
         const userData = response.data[0];
 
-        // Set user role from response
-        let roleId = 2; // Default to GUEST
-        if (userData.pi_roles && userData.pi_roles.length > 0) {
+        // Assign role
+        let roleId = 2;
+        if (userData.pi_roles?.length > 0) {
           roleId = userData.pi_roles[0].role_id;
         }
 
         setUser(userData);
         setUserRole(roleId);
-        // Securely store subscription data in context only (not localStorage)
         setExpiryDate(response.expiry_date || null);
         setIsAppValid(response.is_app_valid || false);
-        
-        // Create a hash for validation (prevents simple console manipulation)
+
+        // Secure hash
         const subscriptionData = `${userData.user_id}_${response.is_app_valid}_${response.expiry_date}`;
-        const hash = btoa(subscriptionData); // Simple encoding for basic protection
+        const hash = btoa(subscriptionData);
         setSubscriptionHash(hash);
 
-        // Store only user data and role in localStorage
-        // Subscription data (isAppValid, expiryDate) is kept in context only
+        // UI only: persist user & role (not access control)
         localStorage.setItem("user", JSON.stringify(userData));
         localStorage.setItem("userRole", roleId.toString());
 
@@ -130,38 +128,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = () => {
     setUser(null);
-    setUserRole(2); // Reset to GUEST
+    setUserRole(2);
     setExpiryDate(null);
-    setIsAppValid(true); // Reset to default
+    setIsAppValid(false);
     setSubscriptionHash(null);
+
     localStorage.removeItem("user");
     localStorage.removeItem("userRole");
     toast.success("Logged out successfully");
     navigate("/signin");
   };
 
-  // Secure function to check feature access with additional validation
   const checkFeatureAccess = (): boolean => {
-    if (!user || !subscriptionHash) {
-      return false;
-    }
-    
-    // Validate the subscription hash to ensure it hasn't been tampered with
+    if (!user || !subscriptionHash) return false;
     const expectedData = `${user.user_id}_${isAppValid}_${expiryDate}`;
     const expectedHash = btoa(expectedData);
-    
+
     if (subscriptionHash !== expectedHash) {
-      // Hash mismatch indicates potential tampering
-      console.warn("Subscription validation failed");
+      console.warn("Hash validation failed. Possible tampering.");
       return false;
     }
-    
+
     return isAppValid;
   };
 
   const updateUserData = (updatedUser: User) => {
     setUser(updatedUser);
-    localStorage.setItem("user", JSON.stringify(updatedUser));
+    localStorage.setItem("user", JSON.stringify(updatedUser)); // For UI continuity
   };
 
   return (
@@ -187,7 +180,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;

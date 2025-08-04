@@ -8,7 +8,8 @@ import { toast } from "sonner";
 import { ChatMessage, LLMSource } from "@/types/api";
 import SessionIndicator from "./SessionIndicator";
 import FreeTierModal from "./FreeTierModal";
-import markdownComponents from "./Markdown";
+import rehypeRaw from 'rehype-raw';
+
 import {
   Dialog,
   DialogContent,
@@ -289,6 +290,7 @@ const ChatView = ({
                 >
                   <ReactMarkdown
                     remarkPlugins={[remarkGfm]}
+                    rehypePlugins={[rehypeRaw]}
                     components={{
                       a: ({ node, ...props }) => (
                         <a
