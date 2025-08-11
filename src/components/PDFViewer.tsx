@@ -47,7 +47,7 @@ const PDFViewer = ({ file }: PDFViewerProps) => {
   return (
     <div className="w-full h-full border border-gray-200 rounded-md overflow-hidden relative">
       {loading && (
-        <div className="absolute inset-0 bg-gray-50 flex items-center justify-center">
+        <div className="absolute inset-0 bg-muted flex items-center justify-center">
           <div className="flex flex-col items-center">
             <svg className="animate-spin h-8 w-8 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>

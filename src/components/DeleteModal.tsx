@@ -24,11 +24,11 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
 }) => {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md bg-gray-800 border border-gray-700 text-gray-200">
+      <DialogContent className="sm:max-w-md bg-background text-foreground border">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
-        <p className="text-sm text-gray-400">{description}</p>
+        <p className="text-sm text-muted-foreground">{description}</p>
         <DialogFooter className="mt-4 flex justify-end space-x-2">
           <Button variant="ghost" onClick={onClose}>
             {cancelText}

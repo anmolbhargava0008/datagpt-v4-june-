@@ -455,7 +455,7 @@ const ChatView = ({
 
       {/* Session Modal with mobile responsiveness */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className={`${isMobile ? 'mx-4 max-w-[calc(100vw-2rem)]' : 'sm:max-w-md'} bg-gray-900 text-white`}>
+        <DialogContent className={`${isMobile ? 'mx-4 max-w-[calc(100vw-2rem)]' : 'sm:max-w-md'} bg-background text-foreground border`}>
           <DialogHeader>
             <DialogTitle>Current Session</DialogTitle>
           </DialogHeader>

@@ -130,10 +130,10 @@ const ChatHistoryDialog = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md bg-zinc-900 text-white rounded-xl border border-zinc-700 shadow-lg">
+      <DialogContent className="sm:max-w-md bg-background text-foreground rounded-xl border shadow-lg">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-lg text-white">
-            <History className="h-5 w-5 text-purple-400" />
+          <DialogTitle className="flex items-center gap-2 text-lg text-foreground">
+            <History className="h-5 w-5 text-primary" />
             Chat History
           </DialogTitle>
         </DialogHeader>
@@ -141,34 +141,34 @@ const ChatHistoryDialog = ({
         <ScrollArea className="h-[60vh] pr-2">
           {loading ? (
             <div className="flex justify-center py-8">
-              <div className="animate-spin h-8 w-8 border-4 border-purple-500 rounded-full border-t-transparent" />
+              <div className="animate-spin h-8 w-8 border-4 border-primary rounded-full border-t-transparent" />
             </div>
           ) : sessionGroups.length > 0 ? (
             <div className="space-y-4">
               {sessionGroups.map((group) => (
-                <div key={group.sessionId} className="bg-zinc-800 rounded-lg shadow-sm">
+                <div key={group.sessionId} className="bg-card rounded-lg shadow-sm border">
                   <Button
                     variant="ghost"
-                    className="w-full flex justify-between items-center px-4 py-3 text-left bg-zinc-800 hover:bg-zinc-700 transition"
+                    className="w-full flex justify-between items-center px-4 py-3 text-left bg-card hover:bg-muted transition"
                     onClick={() => toggleSession(group.sessionId)}
                   >
                     <div className="flex flex-col">
-                      <span className="text-sm font-semibold text-white">
+                      <span className="text-sm font-semibold text-card-foreground">
                         Session {group.sessionId.slice(0, 8)}...
                       </span>
-                      <span className="text-xs text-zinc-400">
+                      <span className="text-xs text-muted-foreground">
                         {group.firstPromptTime} • {group.prompts.length} messages
                       </span>
                     </div>
-                    <span className="text-white">{expandedSession === group.sessionId ? "▲" : "▼"}</span>
+                    <span className="text-card-foreground">{expandedSession === group.sessionId ? "▲" : "▼"}</span>
                   </Button>
 
                   {expandedSession === group.sessionId && (
                     <div className="p-3 pt-0">
                       {group.documents.length > 0 && (
-                        <div className="mb-3 p-3 bg-zinc-700 rounded-lg text-sm">
-                          <div className="font-medium text-white mb-1">Documents:</div>
-                          <ul className="list-disc list-inside text-zinc-300">
+                        <div className="mb-3 p-3 bg-muted rounded-lg text-sm">
+                          <div className="font-medium text-foreground mb-1">Documents:</div>
+                          <ul className="list-disc list-inside text-muted-foreground">
                             {group.documents.map((doc, idx) => (
                               <li key={idx} className="flex items-center">
                                 {isUrlDocument(doc) ? (
@@ -188,10 +188,10 @@ const ChatHistoryDialog = ({
                           <Button
                             key={prompt.prompt_id}
                             variant="ghost"
-                            className="w-full justify-start text-left px-3 py-2 text-sm hover:bg-zinc-700 text-white transition"
+                            className="w-full justify-start text-left px-3 py-2 text-sm hover:bg-muted text-foreground transition"
                             onClick={() => handlePromptClick(prompt)}
                           >
-                            <MessageSquare className="h-4 w-4 mr-2 text-purple-300" />
+                            <MessageSquare className="h-4 w-4 mr-2 text-primary" />
                             <span className="truncate">{prompt.prompt_text}</span>
                           </Button>
                         ))}
@@ -202,8 +202,8 @@ const ChatHistoryDialog = ({
               ))}
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center py-12 text-zinc-500">
-              <History className="h-10 w-10 mb-3 text-purple-300" />
+            <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+              <History className="h-10 w-10 mb-3 text-primary" />
               <p>No chat history found</p>
             </div>
           )}

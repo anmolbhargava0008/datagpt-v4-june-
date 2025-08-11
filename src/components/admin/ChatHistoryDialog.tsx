@@ -97,7 +97,7 @@ const ChatHistoryDialog = ({ isOpen, onClose, userId }: ChatHistoryDialogProps) 
                         <div className="font-medium mb-2">
                           Prompt #{item.prompt_id}: {item.prompt_text}
                         </div>
-                        <div className="text-sm whitespace-pre-wrap bg-gray-50 p-3 rounded border">
+                        <div className="text-sm whitespace-pre-wrap bg-muted p-3 rounded border">
                           {item.response_text}
                         </div>
                         <div className="mt-2 text-xs text-muted-foreground">
