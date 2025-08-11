@@ -149,6 +149,32 @@ export const documentApi = {
     });
     return handleResponse<ApiResponse<null>>(response);
   },
+
+  // Add method to save scraped URL as document
+  saveUrl: async (
+    url: string,
+    workspace: Workspace
+  ): Promise<ApiResponse<Document>> => {
+    const documentData: Document = {
+      ws_doc_path: url,
+      ws_doc_name: "",
+      ws_doc_extn: "url",
+      ws_doc_for: "",
+      ws_id: workspace.ws_id || 0,
+      user_id: workspace.user_id || DEFAULT_USER_ID,
+      is_active: true,
+    };
+
+    const response = await fetch(`${API_BASE_URL}/api/v1/ws-docs`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(documentData),
+    });
+
+    return handleResponse<ApiResponse<Document>>(response);
+  },
 };
 
 export const promptHistoryApi = {

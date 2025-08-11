@@ -1159,6 +1159,26 @@ export const WorkspaceProvider = ({ children }: { children: ReactNode }) => {
             }
             return prevDocs;
           });
+
+          // Save the scraped URL to the ws-docs API
+          try {
+            const saveResponse = await documentApi.saveUrl(url, {
+              ...selectedWorkspace,
+              user_id: user?.user_id || 1,
+            });
+
+            if (saveResponse.success) {
+              console.log("URL saved to ws-docs API successfully");
+              // Refresh workspaces to update the document list
+              await refreshWorkspaces();
+            } else {
+              console.error("Failed to save URL to ws-docs API");
+              toast.error("Failed to save URL metadata");
+            }
+          } catch (saveErr) {
+            console.error("Failed to save URL to ws-docs API:", saveErr);
+            toast.error("Failed to save URL metadata");
+          }
           
           return true;
         } else {
