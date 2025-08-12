@@ -3,9 +3,9 @@ import { useWorkspace } from "@/context/WorkspaceContext";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Button } from "@/components/ui/button";
-import { Send, Upload, FileText, Link, ClipboardCopy } from "lucide-react";
+import { Send, Upload, FileText, Link, ClipboardCopy, CheckIcon} from "lucide-react";
 import { toast } from "sonner";
-import { ChatMessage, LLMSource } from "@/types/api";
+import { LLMSource } from "@/types/api";
 import SessionIndicator from "./SessionIndicator";
 import FreeTierModal from "./FreeTierModal";
 import rehypeRaw from 'rehype-raw';
@@ -51,7 +51,7 @@ const ChatView = ({
   const [typewriterText, setTypewriterText] = useState<string>("");
   const [typewriterIndex, setTypewriterIndex] = useState<number>(0);
   const [messageSentWorkspaces, setMessageSentWorkspaces] = useState<Record<number, boolean>>({});
-
+  const [copiedId, setCopiedId] = useState(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const hasChatHistory = chatMessages[workspaceId]?.length > 0;
   const isPdfSession = currentSessionType === "pdf";
@@ -273,7 +273,9 @@ const ChatView = ({
 
   return (
     <div className="flex flex-col h-full bg-gray-800 relative">
-      {/* Chat messages with proper mobile spacing - scrollable area */}
+      
+      {/* Chat messages: */}
+
       <div className="flex-grow overflow-y-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
         <div className={`max-w-none ${isMobile ? '' : 'max-w-6xl mx-auto'} w-full`}>
           {hasChatHistory ? (
@@ -284,9 +286,9 @@ const ChatView = ({
               >
                 <div
                   className={`relative ${msg.type === "user"
-                      ? "inline-block max-w-[80%] bg-gradient-to-br from-purple-500 to-indigo-600 hover:bg-[#A259FF]/90 text-white ml-4 sm:ml-12"
-                      : "w-full sm:max-w-4xl bg-gray-800 text-white mr-4 sm:mr-12"
-                    } px-4 sm:px-5 py-3 sm:py-4 rounded-2xl text-xs sm:text-sm leading-relaxed shadow-[0_-3px_6px_rgba(0,0,0,0.1),0_3px_6px_rgba(0,0,0,0.1),-3px_0_6px_rgba(0,0,0,0.1),3px_0_6px_rgba(0,0,0,0.1)]`}
+                    ? "inline-block max-w-[80%] bg-gradient-to-br from-purple-500 to-indigo-600 hover:bg-[#A259FF]/90 text-white ml-4 sm:ml-12"
+                    : "w-full sm:max-w-4xl bg-gray-800 text-white mr-4 sm:mr-12"
+                    } px-4 sm:px-5 sm:py-4 rounded-2xl text-xs sm:text-sm leading-relaxed shadow-[0_-3px_6px_rgba(0,0,0,0.1),0_3px_6px_rgba(0,0,0,0.1),-3px_0_6px_rgba(0,0,0,0.1),3px_0_6px_rgba(0,0,0,0.1)]`}
                 >
                   <ReactMarkdown
                     remarkPlugins={[remarkGfm]}
@@ -357,13 +359,22 @@ const ChatView = ({
                       <button
                         onClick={() => {
                           navigator.clipboard.writeText(msg.content);
+                          setCopiedId(msg.id);
                           toast.success("Response copied");
+                          setTimeout(() => setCopiedId(null), 2000);
                         }}
-                        className="absolute top-2 right-2 text-gray-400 hover:text-white min-h-[44px] min-w-[44px] flex items-center justify-center rounded"
-                        title="Copy response"
-                        aria-label="Copy response"
+                        className="absolute top-2 right-2 text-gray-400 hover:text-white"
+
                       >
-                        <ClipboardCopy className="h-4 w-4" />
+                        {copiedId === msg.id ? (
+                          <>
+                            <CheckIcon className="w-4 h-4 text-green-400" />
+                          </>
+                        ) : (
+                          <>
+                            <ClipboardCopy className="w-4 h-4" />
+                          </>
+                        )}
                       </button>
                       {renderSources(msg.sources, msg.id)}
                     </>
@@ -455,7 +466,7 @@ const ChatView = ({
 
       {/* Session Modal with mobile responsiveness */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className={`${isMobile ? 'mx-4 max-w-[calc(100vw-2rem)]' : 'sm:max-w-md'} bg-background text-foreground border`}>
+        <DialogContent className={`${isMobile ? 'mx-4 max-w-[calc(100vw-2rem)]' : 'sm:max-w-md'} bg-gray-900 text-white`}>
           <DialogHeader>
             <DialogTitle>Current Session</DialogTitle>
           </DialogHeader>

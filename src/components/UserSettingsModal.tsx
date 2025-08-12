@@ -94,7 +94,7 @@ const UserSettingsModal = ({ isOpen, onClose }: UserSettingsModalProps) => {
     try {
       setLoading(true);
       
-      const response = await fetch(`/api/v1/signin-forgotpwd`, {
+      const response = await fetch(`${API_BASE_URL}/api/v1/signin-forgotpwd`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",

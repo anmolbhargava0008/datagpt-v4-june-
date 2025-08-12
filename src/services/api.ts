@@ -157,7 +157,7 @@ export const documentApi = {
   ): Promise<ApiResponse<Document>> => {
     const documentData: Document = {
       ws_doc_path: url,
-      ws_doc_name: "",
+      ws_doc_name: "url",
       ws_doc_extn: "url",
       ws_doc_for: "",
       ws_id: workspace.ws_id || 0,
