@@ -464,37 +464,55 @@ export const WorkspaceProvider = ({ children }: { children: ReactNode }) => {
               [selectedWorkspace.ws_id!]: prompt.session_id,
             }));
 
-            // Extract document names and determine session type
-            const documents = extractDocumentNamesFromPrompts(sortedPrompts);
-            
-            // Determine session type based on documents
-            const hasPdfs = documents.some(doc => doc.endsWith('.pdf'));
-            const hasUrls = documents.some(doc => doc.startsWith('http'));
-            
-            let sessionType: SessionType = 'empty';
-            if (hasPdfs && hasUrls) {
-              sessionType = 'pdf'; // Mixed type defaults to 'pdf'
-            } else if (hasPdfs) {
-              sessionType = 'pdf';
-            } else if (hasUrls) {
-              sessionType = 'url';
-            }
-            
-            // Update session type
-            setSessionTypes((prev) => ({
-              ...prev,
-              [selectedWorkspace.ws_id!]: sessionType
-            }));
-            
-            setCurrentSessionType(sessionType);
-            
-            // Update session documents
-            setSessionDocuments((prev) => ({
-              ...prev,
-              [selectedWorkspace.ws_id!]: documents,
-            }));
-            
-            setCurrentSessionDocuments(documents);
+            // Load documents from database for this workspace
+            documentApi.getAll(selectedWorkspace.ws_id!).then((documents) => {
+              const documentList: string[] = [];
+              
+              documents.forEach(doc => {
+                // Add URLs (stored in ws_doc_path)
+                if (doc.ws_doc_extn === 'url' && doc.ws_doc_path) {
+                  documentList.push(doc.ws_doc_path);
+                }
+                // Add PDFs (stored in ws_doc_name)
+                else if (doc.ws_doc_extn === 'pdf' && doc.ws_doc_name) {
+                  documentList.push(doc.ws_doc_name);
+                }
+              });
+              
+              // Determine session type based on documents
+              const hasPdfs = documentList.some(doc => doc.endsWith('.pdf'));
+              const hasUrls = documentList.some(doc => doc.startsWith('http'));
+              
+              let sessionType: SessionType = 'empty';
+              if (hasPdfs && hasUrls) {
+                sessionType = 'pdf'; // Mixed type defaults to 'pdf'
+              } else if (hasPdfs) {
+                sessionType = 'pdf';
+              } else if (hasUrls) {
+                sessionType = 'url';
+              }
+              
+              // Update session type
+              setSessionTypes((prev) => ({
+                ...prev,
+                [selectedWorkspace.ws_id!]: sessionType
+              }));
+              
+              setCurrentSessionType(sessionType);
+              
+              // Update session documents
+              setSessionDocuments((prev) => ({
+                ...prev,
+                [selectedWorkspace.ws_id!]: documentList,
+              }));
+              
+              setCurrentSessionDocuments(documentList);
+            }).catch((docError) => {
+              console.error("Error loading workspace documents:", docError);
+              // Fall back to extracting from prompts if database fails
+              const documents = extractDocumentNamesFromPrompts(sortedPrompts);
+              setCurrentSessionDocuments(documents);
+            });
 
             toast.success("Loaded chat history");
           }
@@ -562,6 +580,26 @@ export const WorkspaceProvider = ({ children }: { children: ReactNode }) => {
 
   const listUploadedFiles = async (sessionId: string): Promise<string[]> => {
     try {
+      // Get documents from the database for the current workspace
+      if (selectedWorkspace?.ws_id) {
+        const documents = await documentApi.getAll(selectedWorkspace.ws_id);
+        const documentList: string[] = [];
+        
+        documents.forEach(doc => {
+          // Add URLs (stored in ws_doc_path)
+          if (doc.ws_doc_extn === 'url' && doc.ws_doc_path) {
+            documentList.push(doc.ws_doc_path);
+          }
+          // Add PDFs (stored in ws_doc_name)
+          else if (doc.ws_doc_extn === 'pdf' && doc.ws_doc_name) {
+            documentList.push(doc.ws_doc_name);
+          }
+        });
+        
+        return documentList;
+      }
+      
+      // Fallback to LLM API if no workspace selected
       const result = await llmApi.listFiles(sessionId);
       if (result.success && result.files) {
         return result.files;
