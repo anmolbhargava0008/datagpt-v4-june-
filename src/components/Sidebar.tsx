@@ -290,7 +290,7 @@ const Sidebar = ({ onWorkspaceSelect }: SidebarProps) => {
                                   {/* Buttons*/}
                                   <div className="flex items-center space-x-2 mt-0.5">
                                     <p className="text-xs text-gray-400">
-                                      {workspace.fileCount} {workspace.fileCount === 1 ? 'file' : 'files'}
+                                      {workspace.fileCount} {workspace.fileCount === 1 ? 'Source' : 'Sources'}
                                     </p>
                                     <Tooltip.Provider delayDuration={0}>
                                       <div className="flex gap-2">
