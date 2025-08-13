@@ -219,10 +219,6 @@ const Sidebar = ({ onWorkspaceSelect }: SidebarProps) => {
           </div>
 
           <div className="flex-1 overflow-y-auto px-3 py-2 min-h-0">
-            <div className="flex items-center text-sm font-medium text-gray-400 mb-2">
-              <Folder className="h-4 w-4 mr-2" /> WORKSPACES
-            </div>
-
             <div className="space-y-1 mt-2">
               {Object.entries(
                 workspaces
