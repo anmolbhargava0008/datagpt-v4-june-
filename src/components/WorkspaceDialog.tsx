@@ -29,7 +29,7 @@ const WorkspaceDialog = ({ isOpen, onClose, workspace }: WorkspaceDialogProps) =
     } else {
       setWorkspaceName('');
     }
-  }, [workspace]);
+  }, [workspace, isOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
